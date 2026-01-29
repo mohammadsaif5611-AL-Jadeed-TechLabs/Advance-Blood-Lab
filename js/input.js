@@ -1,5 +1,6 @@
 
-import * as Tests from "./tests/index.js";
+import Tests from "../tests/index.js";
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
