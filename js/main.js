@@ -1,4 +1,7 @@
+// import * as Tests from "../tests/index.js";
 import Tests from "../tests/index.js";
+
+console.log("Tests object:", Tests);
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -52,6 +55,4 @@ form.addEventListener("submit", e => {
 
 
 
-
 });
-
