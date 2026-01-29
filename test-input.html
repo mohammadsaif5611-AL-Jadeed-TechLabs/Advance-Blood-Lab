@@ -2,6 +2,8 @@
 <html>
 <head>
   <title>Enter Test Values</title>
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <script type="module" src="js/input.js"></script>
 </head>
@@ -9,9 +11,121 @@
 
 <div class="container mt-4">
   <h4 id="patientInfo"></h4>
-  <form id="testForm"></form>
+ <form id="testForm" class="test-form"></form>
+
   <button class="btn btn-success mt-3" onclick="next()">Preview</button>
 </div>
 
 </body>
+<style>
+/* ===== PAGE ===== */
+body {
+  background: #f4f6f8;
+}
+
+.container {
+  max-width: 900px;
+}
+
+/* ===== PATIENT INFO ===== */
+#patientInfo {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+/* ===== CARD ===== */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border: none;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+/* ===== GRID ===== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+}
+
+/* ===== LABEL + INPUT ===== */
+label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
+
+.input:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40,167,69,0.15);
+}
+
+/* ===== FULL WIDTH FIELD ===== */
+.full-row {
+  grid-column: span 2;
+}
+
+/* ===== BUTTON ===== */
+button.btn-success {
+  border-radius: 10px;
+  font-size: 16px;
+  padding: 10px;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  .container {
+    padding: 12px;
+  }
+
+  #patientInfo {
+    font-size: 16px;
+  }
+
+  .card-title {
+    font-size: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-row {
+    grid-column: span 1;
+  }
+
+  .input {
+    font-size: 15px;
+    padding: 10px;
+  }
+
+  button.btn-success {
+    width: 100%;
+  }
+}
+</style>
+
 </html>
