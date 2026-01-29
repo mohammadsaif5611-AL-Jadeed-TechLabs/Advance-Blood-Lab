@@ -1,4 +1,4 @@
-import * as Tests from "../tests/index.js";
+import * as Tests from "./tests/index.js";
 
 const patient = JSON.parse(localStorage.getItem("patient"));
 const report = JSON.parse(localStorage.getItem("report"));
@@ -131,3 +131,4 @@ window.download = function () {
     })
     .save();
 };
+
