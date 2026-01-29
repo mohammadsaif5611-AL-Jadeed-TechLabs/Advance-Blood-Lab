@@ -1,0 +1,91 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ===== PDF ROOT ===== */
+#pdf {
+  width: 210mm;
+  margin: 0 auto;
+}
+
+/* ===== ONE PAGE ===== */
+.page {
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  page-break-after: always;
+  overflow: hidden;
+}
+
+/* ===== FIXED TEMPLATE (TOP + BG + BOTTOM) ===== */
+.page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Top + Bottom fully opaque */
+  background:
+    url("../assets/top.jpeg") top center no-repeat,
+    url("../assets/bottom.jpeg") bottom center no-repeat;
+  background-size:
+    100% 200px,   /* TOP IMAGE HEIGHT */
+    100% 140px;    /* BOTTOM IMAGE HEIGHT */
+  z-index: 0;
+}
+
+/* ===== BG IMAGE WITH REDUCED OPACITY ===== */
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../assets/BG.jpg") center center no-repeat;
+  background-size: 70% auto;  /* BG IMAGE SIZE */
+  opacity: 0.3;  /* 👈 Adjust opacity here */
+  z-index: 0;
+}
+
+/* ===== CONTENT AREA ===== */
+/* //CONTENT (PATIENT + TESTS) POSITION */
+.page-content {
+  position: relative;
+  z-index: 1;
+  padding: 180px 0px 0px 65px;
+  height: calc(297mm - 130px - 90px);
+  box-sizing: border-box;
+}
+
+/* ===== PATIENT ===== */
+
+.patient {
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+.patient div:last-child {
+  text-align: right;
+}
+
+
+/* ===== TABLE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table th,
+table td {
+  font-size: 13.5px;
+  padding: 6px;
+}
+
+/* ===== TEST SAFETY ===== */
+.test-block {
+  page-break-inside: avoid;
+}
