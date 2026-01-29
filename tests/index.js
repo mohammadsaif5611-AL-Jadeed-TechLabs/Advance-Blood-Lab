@@ -1,7 +1,7 @@
 import CBC from "./CBC.js";
 import URINE from "./URINE.js";
 
-export {
+export default {
   CBC,
   URINE
 };
