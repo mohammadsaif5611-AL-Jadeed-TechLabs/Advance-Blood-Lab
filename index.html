@@ -7,10 +7,14 @@
 </head>
 <body class="bg-light">
 
-<div class="container mt-4">
-  <h4 >Patient Details</h4>
+<div class="container-fluid mt-3 px-2">
+  <div class="row justify-content-center">
+    <div class="col-12">
 
- <form id="patientForm" class="card p-3">
+      <h4 class="text-center mb-3">Patient Details</h4>
+
+      <form id="patientForm" class="card p-3">
+
 
   <!-- <h5 class="mb-3">Patient Information</h5> -->
 
@@ -44,7 +48,8 @@
   />
 
   <div class="row">
-    <div class="col-md-6">
+    <div class="col-12 col-md-6">
+
       <label>Age</label>
       <input
         class="form-control mb-2"
@@ -57,7 +62,8 @@
       />
     </div>
 
-    <div class="col-md-6">
+   <div class="col-12 col-md-6">
+
       <label>Sex</label>
       <select class="form-control mb-2" id="sex">
         <option>Male</option>
@@ -81,12 +87,16 @@
   />
 
   <h5 class="mt-3">Select Tests</h5>
-  <div id="tests" class="mb-3"></div>
+ <div id="tests" class="mb-3 test-list"></div>
+
 
   <button class="btn btn-primary w-100">Next</button>
-</form>
+      </form>
 
+    </div>
+  </div>
 </div>
+
 
 </body>
 <style>
@@ -95,52 +105,65 @@
 
   body {
     font-size: 15px;
+    background: #f4f6f8;
   }
 
-  .container {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  h4 {
-    text-align: center;
-    font-weight: bold;
+  #patientForm {
+    border-radius: 14px;
+    padding: 14px !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
   }
 
   label {
     font-weight: 600;
-    margin-bottom: 4px;
+    font-size: 14px;
   }
 
   input.form-control,
   select.form-control {
-    font-size: 16px; /* 👈 mobile zoom fix */
-    padding: 10px;
-  }
-
-  .btn {
-    font-size: 18px;
+    font-size: 16px;   /* mobile zoom fix */
     padding: 12px;
+    border-radius: 8px;
   }
 
-  /* ===== CHECKBOX FIX ===== */
+  .test-list {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 8px;
+    background: #fafafa;
+  }
+
   .form-check {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    gap: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
   }
 
   .form-check-input {
-    transform: scale(1.5);   /* 👈 checkbox bigger */
-    margin-right: 10px;
-    cursor: pointer;
+    transform: scale(1.6);
+    margin: 0;
   }
 
   .form-check-label {
     font-size: 16px;
-    cursor: pointer;
+    flex: 1;
+  }
+
+  .btn {
+    font-size: 18px;
+    padding: 14px;
+    border-radius: 12px;
   }
 }
+
+
 </style>
 
 <script>
