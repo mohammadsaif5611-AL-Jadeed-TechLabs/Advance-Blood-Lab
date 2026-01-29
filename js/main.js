@@ -1,4 +1,4 @@
-import * as Tests from "../tests/index.js";
+import * as Tests from "./tests/index.js";
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -48,6 +48,7 @@ form.addEventListener("submit", e => {
     localStorage.setItem("tests", JSON.stringify(selected));
     window.location.href = "test-input.html";
   });
+
 
 
 
