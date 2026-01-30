@@ -103,36 +103,59 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====================== FIELD RENDERER (CORE LOGIC) ======================
   function renderField(test, testKey, f) {
 
-    const key = `${testKey}_${f[0]}`;
-    const fieldName = f[0].toLowerCase();
+      // SUPPORT BOTH ARRAY & OBJECT
+  const fieldName = f.name || f[0];
+  const unit = f.unit || f[1];
+  const type = f.type || "text";
+
+  const key = `${testKey}_${fieldName}`.replace(/\s+/g, "_");
+
+    // const key = `${testKey}_${f[0]}`;
+    // const fieldName = f[0].toLowerCase();
 
     // ====================== CBC TEST FIELDS ======================
     if (isCBC(test.title)) {
 
-      // TLC & Platelets
-      if (isCommaField(fieldName)) {
-        return `
-          <label>${f[0]}</label>
-          <input type="text"
-                 class="input full-row"
-                 id="${key}"
-                 placeholder="${f[0]}"
-                 inputmode="numeric"
-                 oninput="onlyIntWithComma(this)">
-        `;
-      }
+  const lname = fieldName.toLowerCase();
 
-      // All other CBC numeric fields
-      return `
-        <label>${f[0]}</label>
-        <input type="text"
-               class="input full-row"
-               id="${key}"
-               placeholder="${f[0]}"
-               inputmode="decimal"
-               oninput="onlyFloat(this)">
-      `;
-    }
+  if (isCommaField(lname)) {
+    return `
+      <label>${fieldName}</label>
+      <input type="text"
+             class="input full-row"
+             id="${key}"
+             inputmode="numeric"
+             oninput="onlyIntWithComma(this)">
+    `;
+  }
+
+  return `
+    <label>${fieldName}</label>
+    <input type="text"
+           class="input full-row"
+           id="${key}"
+           inputmode="decimal"
+           oninput="onlyFloat(this)">
+  `;
+}
+
+    // =================Biochemistry===== BLOOD SUGAR TEST FIELDS =========
+    // Blood Sugar test detection
+const isBloodSugar = title =>
+  title.toLowerCase().includes("blood sugar") ||
+  title.toLowerCase().includes("glucose");
+
+if (isBloodSugar(test.title)) {
+  return `
+    <label>${fieldName}</label>
+    <input type="text"
+           class="input full-row"
+           id="${key}"
+           inputmode="decimal"
+           oninput="onlyFloat(this)">
+  `;
+}
+
 
     // ====================== URINE ANALYSIS FIELDS ======================
     if (test.title.toLowerCase().includes("urine")) {
