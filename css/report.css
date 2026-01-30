@@ -1,91 +1,342 @@
-@page {
-  size: A4;
+
+html, body {
   margin: 0;
+  padding: 0;
+  height: 100%;
 }
+
 
 body {
   margin: 0;
-  background: #fff;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* ===== PDF ROOT ===== */
 #pdf {
-  width: 210mm;
-  margin: 0 auto;
+  width: 213mm;
+  margin: auto;
 }
 
-/* ===== ONE PAGE ===== */
+/* ================= PAGE ================= */
 .page {
-  width: 210mm;
-  height: 297mm;
+  width: 213mm;
+  height: 285mm;
+  /* min-height: 297mm; */
   position: relative;
-  page-break-after: always;
-  overflow: hidden;
+  page-break-after: auto;
+  overflow: hidden;  
+}
+.page:last-child {
+  page-break-after: avoid;
 }
 
-/* ===== FIXED TEMPLATE (TOP + BG + BOTTOM) ===== */
+
+
+
+
+.footer {
+  margin-top: 4mm;        /* content ke niche same gap */
+  font-size: 14px;
+  page-break-inside: avoid;
+}
+
+
+.footer-safe {
+  height: 40mm;   /* bottom image safe zone */
+}
+
+
+.footer-line {
+  border-top: 1px solid #000;
+  width: calc(100% - 0mm);
+  margin: 0 auto 6px auto;
+}
+
+.footer-text {
+    text-align: left;
+    padding-left: 3mm;
+}
+
+.footer-thanks {
+    text-align: right;
+    padding-right: 9mm;
+    margin-top: 4px;
+}
+/* ================= TEMPLATE ================= */
 .page::before {
   content: "";
   position: absolute;
   inset: 0;
-  /* Top + Bottom fully opaque */
   background:
     url("../assets/top.jpeg") top center no-repeat,
     url("../assets/bottom.jpeg") bottom center no-repeat;
   background-size:
-    100% 200px,   /* TOP IMAGE HEIGHT */
-    100% 140px;    /* BOTTOM IMAGE HEIGHT */
+    100% 52mm,
+    100% 38mm;
   z-index: 0;
 }
 
-/* ===== BG IMAGE WITH REDUCED OPACITY ===== */
 .page::after {
   content: "";
   position: absolute;
   inset: 0;
   background: url("../assets/BG.jpg") center center no-repeat;
-  background-size: 70% auto;  /* BG IMAGE SIZE */
-  opacity: 0.3;  /* 👈 Adjust opacity here */
-  z-index: 0;
+  background-size: 60% auto;
+  opacity: 0.3;
+  /* z-index: -11111; */
 }
 
-/* ===== CONTENT AREA ===== */
-/* //CONTENT (PATIENT + TESTS) POSITION */
+/* ================= CONTENT ================= */
+/* .page-content {
+  position: relative;
+  z-index: 1;
+  padding: 52mm 18mm 38mm;
+  box-sizing: border-box;
+  height: 100%;
+} */
+
 .page-content {
   position: relative;
   z-index: 1;
-  padding: 180px 0px 0px 65px;
-  height: calc(297mm - 130px - 90px);
+  padding-top: 47mm;      /* top image height */
+  padding-left: 18mm;
+  padding-right: 18mm;
+  padding-bottom: 0;   /*  footer yaha se control hoga */
+  padding-bottom: 38mm;  
   box-sizing: border-box;
+  /* height: 100%; */
+   /* min-height: calc(297mm - 47mm - 40mm); */
+
+  /* display: flex;
+  flex-direction: column; */
 }
 
-/* ===== PATIENT ===== */
+/* .page-content::after {
+  content: "";
+  height: 38mm;      
+  flex-shrink: 0;
+} */
 
-.patient {
-  font-size: 14px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
+/* ================= TEST AREA ================= */
+.tests {
+  width: 100%;
+   /* height: calc(297mm - 52mm - 38mm - 30mm);  */
+  /* page - top - bottom - patient+footer */
+  /* overflow: hidden; */
 }
-.patient div:last-child {
-  text-align: right;
+
+
+
+/* ===== EACH TEST BLOCK ===== */
+.test-block {
+  margin-bottom: 6mm;  /* 🎯 y += 7 effect */
+  page-break-inside: avoid;
 }
+
+/* ===== SECTION HEADING (URINE / DIFF COUNT) ===== */
+.test-block th[colspan="4"] {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  font-weight: 700;
+}
+.test-block tr th[colspan="4"] {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* ================= TABLE ================= */
 
 
 /* ===== TABLE ===== */
 table {
   width: 100%;
   border-collapse: collapse;
-}
-
-table th,
-table td {
-  font-size: 13.5px;
-  padding: 6px;
-}
-
-/* ===== TEST SAFETY ===== */
-.test-block {
+  font-size: 14px;   /* 🎯 jsPDF match */
+ 
   page-break-inside: avoid;
+
+
+}
+
+th {
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 4px;
+  line-height: 1.25;
+}
+
+td {
+    padding: 4px 4px;
+    line-height: 1;
+    letter-spacing: 1px;
+}
+
+
+
+/* ================= PATIENT ================= */
+.patient {
+  height: 20mm;
+  font-size: 14.5px;     /* 🎯 exact */
+  line-height: 1.55;    /* 🎯 row gap */
+  margin-bottom: 6mm;
+}
+
+
+.patient-row {
+  display: flex;
+  justify-content: space-between;
+  column-gap: 44mm;   /* 🔥 dono columns ke beech exact gap */
+}
+
+
+
+.patient-col {
+  width: 48%;
+}
+
+.patient-col.right {
+  text-align: left;   /* ❗ keep text aligned like original */
+}
+
+
+
+/* HR EXACT LIKE REPORT */
+.patient hr {
+  margin-top: 2mm;
+  border: none;
+  border-top: 1px solid #000;
+}
+
+/* TWO MAIN COLUMNS */
+.patient-grid {
+  display: flex;
+  justify-content: space-between;
+  column-gap: 25mm;   /* 🔥 exact gap between left & right */
+}
+
+/* ONE ROW */
+
+.p-value {
+  font-weight: 600;
+}
+
+/* ===== PATIENT BLOCK ===== */
+
+
+
+/* EACH ROW = 3 FIXED COLUMNS */
+
+.p-row {
+    display: grid;
+    grid-template-columns: 15mm 10mm auto; /* LABEL | : | VALUE */
+    line-height: 1.45;
+    letter-spacing: 0.2px;
+    margin-bottom: 1.5mm;
+}
+
+.p-label {
+  font-weight: 600;
+}
+
+.p-colon {
+  text-align: center;
+}
+
+.p-value {
+  white-space: nowrap;
+}
+/* ===== TABLE BASE ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 4mm;
+}
+
+/* ===== TEST TITLE ===== */
+.test-title th {
+  font-size: 15.3px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 0;
+  /* border: 1px solid #000; */
+}
+
+/* ===== TABLE HEADER ===== */
+.test-head  {
+  border: 1px solid #000;
+ 
+}
+.test-head th {
+  font-size: 15.3px;
+  font-weight: 700;
+  /* border: 1px solid #000; */
+  padding: 6px 6px;
+}
+
+/* COLUMN ALIGNMENT */
+.test-head th:nth-child(1) { text-align: left; padding-left: 8px; }
+.test-head th:nth-child(2) { text-align: left; width: 18%; }
+.test-head th:nth-child(3) { text-align: left; width: 16%; }
+.test-head th:nth-child(4) { text-align: left; width: 26%; }
+
+/* ===== TABLE ROWS ===== */
+.test-row td {
+    font-size: 14px;
+    font-weight: 500;
+    /* border: 1px solid #000; */
+    padding: 5px 6px;
+}
+
+/* BODY COLUMN ALIGN */
+.test-row td:nth-child(1) { padding-left: 8px; }
+.test-row td:nth-child(2),
+.test-row td:nth-child(3),
+.test-row td:nth-child(4) {
+  text-align: left;;
+}
+
+/* RESULT LOOK (OPTIONAL BOLD LIKE REPORT) */
+.td-result {
+  font-weight: 600;
+}
+
+/* DLC indentation */
+.test-row.dlc-row td:first-child {
+  padding-left: 29px;
+}
+/* DLC heading */
+.dlc-heading td {
+  font-weight: 700;
+  padding: 6px 8px;
+  /* border: 1px solid #000; */
+  /* background: #fff; */
+}
+
+/* DLC indentation */
+.dlc-name {
+  padding-left: 16px;
+}
+
+/* Reference column line spacing */
+.td-ref div {
+  line-height: 1.3;
+}
+/* URINE TABLE */
+.urine-investigation {
+  width: 45%;
+  text-align: left;
+  padding-left: 10px;
+}
+
+.urine-result,
+.urine-result-head {
+  width: 40%;
+  text-align: left;   /* yahin se left/right adjust */
+  padding-left: 10px;
+}
+
+/* Section heading */
+.urine-section th {
+  text-align: left;
+  font-weight: bold;
+  padding: 6px 10px;
 }
