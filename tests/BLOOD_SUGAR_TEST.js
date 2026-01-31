@@ -9,12 +9,24 @@ export default {
       type: "decimal"
     },
     {
+      name: "PARALLEL URINE SUGAR",
+      unit: "",
+      ref: "Nil",
+      type: "string"
+    },
+    {
       name: "BLOOD SUGAR POSTMEAL",
       sub: "(AFTER 1 & 1/2 HOURS)",
       unit: "mg/dl",
       ref: "70 - 160",
       type: "decimal"
-    }
+    },
+     {
+      name: "PARALLEL URINE SUGAR",
+      unit: "",
+      ref: "Nil",
+      type: "string"
+    },
   ]
 };
 
