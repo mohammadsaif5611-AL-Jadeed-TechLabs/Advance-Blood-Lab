@@ -14,10 +14,7 @@
 <div id="pdf"></div>
 <div class="container mt-4">
 
-<button onclick="download()" class="btn btn-primary m-3 col-12" style="
-    width: 90%;
-    margin: 5%;
-">Generate PDF</button>
+<button id="downloadBtn" class="btn btn-primary m-3 col-12">Generate PDF</button>
 </div>
 
 </body>
@@ -44,8 +41,10 @@
     line-height: 1.5;
     border-radius: 5px;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    margin: 1% 5% 1% 5%;
+    width: 90%;
 }
-@media (max-width: 768px) {
+@media (max-width: 500px) {
 
 .btn {
 
@@ -62,14 +61,15 @@
     /* background-color: transparent; */
     border: 1px solid transparent;
     padding: .375rem .75rem;
-    font-size: 3rem;
+    font-size: 2.3rem;
     line-height: 1.5;
     border-radius: 5px;
     transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
        border-radius: 10px;
-  font-size: 16px;
-  padding: 10px;
-   width: 100%;
+
+  padding: 15px;
+   width: 50rem;
+           margin: 3% 0% 4% 8%;
    
 }}
 </style>
