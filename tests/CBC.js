@@ -1,7 +1,7 @@
 export default {
   title: "COMPLETE BLOOD COUNT (CBC)",
   fields: [
-    ["HAEMOGLOBIN", "gm %", "F : 11 - 16 | M : 14 - 18"],
+    ["HAEMOGLOBIN", "gm %", "F : 11.0 - 16.0 | M : 14.0 - 18.0"],
     ["TOTAL LEUCOCYTE COUNT", "/cumm", "4,000 - 10,000"],
     ["NEUTROPHILS", "%", "40 - 75"],
     ["LYMPHOCYTES", "%", "20 - 45"],
