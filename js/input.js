@@ -47,6 +47,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // ====================== FIELD TYPE HELPERS ======================
+// sugar test 
+const isSugarTest = test =>
+  test.title?.toLowerCase().includes("biochemistry") &&
+  test.subtitle?.toLowerCase().includes("sugar");
+
+
 
   // CBC test detection
   const isCBC = title =>
@@ -57,6 +63,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const isCommaField = field =>
     field.includes("leuco") ||
     field.includes("platelet");
+
+
+function makeFieldKey(testKey, fieldName) {
+  return `${testKey}_${fieldName
+    .replace(/\./g, "")
+    .replace(/\s+/g, "_")
+    .toUpperCase()}`;
+}
 
   // ====================== RENDER TESTS ======================
 
@@ -85,16 +99,64 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // ====================== TESTS WITHOUT SECTIONS ======================
-    if (test.fields) {
-      html += `<h5 class="mt-3 mb-2">${test.title} Values</h5><div class="grid">`;
+// ====================== BIOCHEMISTRY : BLOOD SUGAR TEST ======================
+// ====================== BIOCHEMISTRY : BLOOD SUGAR TEST ======================
+if (isSugarTest(test)) {
 
-      test.fields.forEach(f => {
-        html += renderField(test, testKey, f);
-      });
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
-      html += `</div>`;
+  test.fields.forEach(f => {
+    const name = f.name;
+    const sub = f.sub || "";
+    const key = `${testKey}_${name}`.replace(/\s+/g, "_");
+
+    // ✅ PARALLEL URINE SUGAR → SELECT
+    if (name.toLowerCase().includes("urine")) {
+      html += `
+        <label>${name}</label>
+        <select class="input full-row" id="${key}">
+          <option value="Absent" selected>Absent</option>
+          <option value="Traces">Traces</option>
+          <option value="Present +">Present +</option>
+          <option value="Present ++">Present ++</option>
+          <option value="Present +++">Present +++</option>
+        </select>
+      `;
     }
+    // ✅ BLOOD SUGAR INPUT
+    else {
+      html += `
+        <label>
+          ${name}
+          ${sub ? `<br><span class="sub-label">${sub}</span>` : ""}
+        </label>
+        <input
+          type="text"
+          class="input full-row"
+          id="${key}"
+          inputmode="decimal"
+          oninput="onlyFloat(this)"
+        >
+      `;
+    }
+  });
+
+  html += `</div>`;
+}
+
+
+
+// ====================== NORMAL TESTS (CBC etc.) ======================
+else if (test.fields) {
+  html += `<h5 class="mt-3 mb-2">${test.title} Values</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+    html += renderField(test, testKey, f);
+  });
+
+  html += `</div>`;
+}
+
 
     html += `</div>`;
     form.insertAdjacentHTML("beforeend", html);
@@ -139,32 +201,16 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
 }
 
-    // =================Biochemistry===== BLOOD SUGAR TEST FIELDS =========
-    // Blood Sugar test detection
-const isBloodSugar = title =>
-  title.toLowerCase().includes("blood sugar") ||
-  title.toLowerCase().includes("glucose");
-
-if (isBloodSugar(test.title)) {
-  return `
-    <label>${fieldName}</label>
-    <input type="text"
-           class="input full-row"
-           id="${key}"
-           inputmode="decimal"
-           oninput="onlyFloat(this)">
-  `;
-}
 
 
     // ====================== URINE ANALYSIS FIELDS ======================
     if (test.title.toLowerCase().includes("urine")) {
-
+const fieldKey = makeFieldKey(testKey, f[0]);
       // If URINE.js field is defined as SELECT with options
       if (typeof f[1] === "object" && f[1].type === "select") {
         return `
           <label>${f[0]}</label>
-          <select class="input full-row" id="${key}" onchange="toggleOther(this)">
+          <select class="input full-row" id="${fieldKey}" onchange="toggleOther(this)">
             ${f[1].options.map(opt =>
               `<option value="${opt}">${opt}</option>`
             ).join("")}
@@ -183,8 +229,8 @@ if (isBloodSugar(test.title)) {
         <label>${f[0]}</label>
         <input type="text"
                class="input full-row"
-               id="${key}"
-               value="${f[1]?.default || ""}">
+               id="${fieldKey}"
+  value="${f[1]?.default || ""}">
       `;
     }
 
