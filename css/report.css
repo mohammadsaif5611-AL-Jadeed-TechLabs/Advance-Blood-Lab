@@ -1,4 +1,11 @@
 
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+
 html, body {
   margin: 0;
   padding: 0;
@@ -10,32 +17,83 @@ body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
 }
+/* SCREEN ONLY PREVIEW SCALE (SAFE) */
+@media screen {
+  body.preview-scale #pdf {
+    transform: scale(1.08);
+    transform-origin: top center;
+  }
+}
 
 #pdf {
-  width: 213mm;
+  width: 243mm;
   margin: auto;
 }
 
 /* ================= PAGE ================= */
 .page {
-  width: 213mm;
-  height: 285mm;
-  /* min-height: 297mm; */
+  width: 100%;
+  /* height: 297mm;   */
+  height: 320mm;  
   position: relative;
-  page-break-after: auto;
   overflow: hidden;  
+
+   backface-visibility: visible;
+  transform: none;
+
+    /* backface-visibility: hidden;
+  transform: translateZ(0); */
 }
-.page:last-child {
-  page-break-after: avoid;
+/* .page:last-of-type {
+  page-break-after: avoid !important;
+}
+.page:not(:last-child) {
+  page-break-after: always;
+} */
+
+.urine-row .urine-name {
+  padding-left: 60px;   /* adjust as needed */
+}
+
+/* for 2 pdf color and normal  */
+/* ===== PLAIN PDF MODE ===== */
+.plain-mode .header,
+/* .plain-mode .footer,
+.plain-mode .footer-line,
+.plain-mode .footer-thanks, */
+.plain-mode .bg-image {
+  display: none !important;
+}
+
+/* keep space so content position doesn't move */
+.plain-mode .footer-safe {
+  height: 40mm;
+}
+
+.plain-mode .page {
+  background: #ffffff !important;
+}
+
+.plain-mode .page-content {
+  background: none !important;
+}
+
+/* ===== REMOVE TEMPLATE IMAGES IN PLAIN MODE ===== */
+.plain-mode .page::before,
+.plain-mode .page::after {
+  content: none !important;
+  background: none !important;
+  display: none !important;
 }
 
 
-
-
+/* footer  */
 
 .footer {
-  margin-top: 4mm;        /* content ke niche same gap */
-  font-size: 14px;
+  position: relative;
+  margin-top: 0mm;
+  font-size: 16px;
+  z-index: 2;
   page-break-inside: avoid;
 }
 
@@ -59,7 +117,7 @@ body {
 .footer-thanks {
     text-align: right;
     padding-right: 9mm;
-    margin-top: 4px;
+    margin-top: -2px;
 }
 /* ================= TEMPLATE ================= */
 .page::before {
@@ -70,9 +128,12 @@ body {
     url("../assets/top.jpeg") top center no-repeat,
     url("../assets/bottom.jpeg") bottom center no-repeat;
   background-size:
-    100% 52mm,
+    100% 54mm,
     100% 38mm;
   z-index: 0;
+   image-rendering: auto;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .page::after {
@@ -80,8 +141,8 @@ body {
   position: absolute;
   inset: 0;
   background: url("../assets/BG.jpg") center center no-repeat;
-  background-size: 60% auto;
-  opacity: 0.3;
+  background-size: 65% auto;
+  opacity: 0.2;
   /* z-index: -11111; */
 }
 
@@ -97,18 +158,16 @@ body {
 .page-content {
   position: relative;
   z-index: 1;
-  padding-top: 47mm;      /* top image height */
-  padding-left: 18mm;
-  padding-right: 18mm;
-  padding-bottom: 0;   /*  footer yaha se control hoga */
-  padding-bottom: 38mm;  
-  box-sizing: border-box;
-  /* height: 100%; */
-   /* min-height: calc(297mm - 47mm - 40mm); */
 
-  /* display: flex;
-  flex-direction: column; */
+  padding-top: 60mm;     /* top image */
+  padding-left: 23mm;
+  padding-right: 22mm;
+  padding-bottom: 48mm;  /* bottom image */
+
+  height: 100%;
+  box-sizing: border-box;
 }
+
 
 /* .page-content::after {
   content: "";
@@ -119,16 +178,18 @@ body {
 /* ================= TEST AREA ================= */
 .tests {
   width: 100%;
-   /* height: calc(297mm - 52mm - 38mm - 30mm);  */
-  /* page - top - bottom - patient+footer */
-  /* overflow: hidden; */
+  /* max-height: calc(297mm - 54mm - 38mm - 20mm - 40mm); */
+  /* page - topImg - bottomImg - patient - footerSafe */
 }
+
 
 
 
 /* ===== EACH TEST BLOCK ===== */
 .test-block {
-  margin-bottom: 6mm;  /* 🎯 y += 7 effect */
+  display: block;
+  break-inside: avoid;
+  margin-bottom: 0mm;  /* 🎯 y += 7 effect */
   page-break-inside: avoid;
 }
 
@@ -150,7 +211,7 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;   /* 🎯 jsPDF match */
+  font-size: 16px;   /* 🎯 jsPDF match */
  
   page-break-inside: avoid;
 
@@ -167,7 +228,7 @@ th {
 td {
     padding: 4px 4px;
     line-height: 1;
-    letter-spacing: 1px;
+    /* letter-spacing: 1px; */
 }
 
 
@@ -175,9 +236,9 @@ td {
 /* ================= PATIENT ================= */
 .patient {
   height: 20mm;
-  font-size: 14.5px;     /* 🎯 exact */
+  font-size: 16px;     /* 🎯 exact */
   line-height: 1.55;    /* 🎯 row gap */
-  margin-bottom: 6mm;
+  margin-bottom: 5mm;
 }
 
 
@@ -203,7 +264,7 @@ td {
 .patient hr {
   margin-top: 2mm;
   border: none;
-  border-top: 1px solid #000;
+  /* border-top: 1px solid #000; */
 }
 
 /* TWO MAIN COLUMNS */
@@ -227,7 +288,7 @@ td {
 
 .p-row {
     display: grid;
-    grid-template-columns: 15mm 10mm auto; /* LABEL | : | VALUE */
+    grid-template-columns: 17mm 7mm auto; /* LABEL | : | VALUE */
     line-height: 1.45;
     letter-spacing: 0.2px;
     margin-bottom: 1.5mm;
@@ -253,7 +314,7 @@ table {
 
 /* ===== TEST TITLE ===== */
 .test-title th {
-  font-size: 15.3px;
+  font-size: 16.3px;
   font-weight: 700;
   text-align: center;
   padding: 6px 0;
@@ -266,7 +327,7 @@ table {
  
 }
 .test-head th {
-  font-size: 15.3px;
+  font-size: 17px;
   font-weight: 700;
   /* border: 1px solid #000; */
   padding: 6px 6px;
@@ -280,14 +341,14 @@ table {
 
 /* ===== TABLE ROWS ===== */
 .test-row td {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     /* border: 1px solid #000; */
     padding: 5px 6px;
 }
 
 /* BODY COLUMN ALIGN */
-.test-row td:nth-child(1) { padding-left: 8px; }
+.test-row td:nth-child(2) { padding-left: 8px; }
 .test-row td:nth-child(2),
 .test-row td:nth-child(3),
 .test-row td:nth-child(4) {
@@ -322,7 +383,7 @@ table {
 }
 /* URINE TABLE */
 .urine-investigation {
-  width: 45%;
+  width: 34%;
   text-align: left;
   padding-left: 10px;
 }
