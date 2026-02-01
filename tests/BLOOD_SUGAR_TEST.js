@@ -1,5 +1,6 @@
 export default {
   title: "BIOCHEMISTRY REPORT",
+  testname: "BLOOD SUGAR TEST",
   subtitle: "BLOOD SUGAR TEST",
   fields: [
     {
@@ -8,12 +9,16 @@ export default {
       ref: "70 - 110",
       type: "decimal"
     },
-    {
-      name: "PARALLEL URINE SUGAR",
-      unit: "",
-      ref: "Nil",
-      type: "string"
-    },
+
+    // ✅ PARALLEL URINE SUGAR (FASTING)
+  {
+  name: "PARALLEL URINE SUGAR (FASTING)",
+  unit: "",
+  ref: "Nil",
+  type: "select",
+  options: ["Absent","Traces","Present +","Present ++","Present +++"]
+},
+
     {
       name: "BLOOD SUGAR POSTMEAL",
       sub: "(AFTER 1 & 1/2 HOURS)",
@@ -21,22 +26,14 @@ export default {
       ref: "70 - 160",
       type: "decimal"
     },
-     {
-      name: "PARALLEL URINE SUGAR",
-      unit: "",
-      ref: "Nil",
-      type: "string"
-    },
+
+    // ✅ PARALLEL URINE SUGAR (POSTMEAL)
+  {
+  name: "PARALLEL URINE SUGAR (POSTMEAL)",
+  unit: "",
+  ref: "Nil",
+  type: "select",
+  options: ["Absent","Traces","Present +","Present ++","Present +++"]
+}
   ]
 };
-
-
-// BLOOD SUGAR TEST
-
-// 177
-// H
-
-
-// 221
-// H
-
