@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="form-check">
         <input class="form-check-input" type="checkbox" value="${key}">
         <label class="form-check-label">
-          ${Tests[key].title}
+          ${Tests[key].testname}
         </label>
       </div>`;
   });
