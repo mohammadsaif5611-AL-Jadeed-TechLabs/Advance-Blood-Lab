@@ -1,5 +1,8 @@
 import Tests from "../tests/index.js";
 
+
+
+
 function makeKey(testKey, name) {
   return `${testKey}_${name}`
     .replace(/\./g, "")
@@ -96,28 +99,10 @@ const isSugarTest = test =>
   test.title?.toLowerCase().includes("biochemistry") &&
   test.subtitle?.toLowerCase().includes("sugar");
 
-// serum sgot test
-const isSerumSgotTest = test =>
-  test.title?.toLowerCase().includes("biochemistry") &&
-  test.subtitle
-    ?.toLowerCase()
-    .replace(/\./g, "")   // 🔥 dots remove
-    .includes("sgot");
-// serum sgpt test
-const isSerumSgptTest = test =>
-  test.title?.toLowerCase().includes("biochemistry") &&
-  test.subtitle
-    ?.toLowerCase()
-    .replace(/\./g, "")   // 🔥 dots remove
-    .includes("sgpt");
-// serum bilirubin test
-const isSerumBilirubinTest = test =>
-  test.title?.toLowerCase().includes("biochemistry") &&
-  test.subtitle
-    ?.toLowerCase()
-    .replace(/\./g, "")   // 🔥 dots remove
-    .includes("bilirubin");
 
+  // BIOCHEM---LIVERFUNCTION
+const isLFT = test =>
+  String(test.class || "").toUpperCase() === "LIVER FUNCTION TEST";
 
 
 
@@ -167,7 +152,7 @@ function makeFieldKey(testKey, fieldName) {
     }
 
 
-// ====================== BIOCHEMISTRY : BLOOD SUGAR TEST ======================
+// ====================== BIOCHEMISTRY: BLOOD SUGAR TEST ======================
 else if  (isSugarTest(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
@@ -210,8 +195,9 @@ if (f.type === "select") {
 
   html += `</div>`;
 }
-// ====================== BIOCHEMISTRY : SERUM S G O T TEST ======================
-else if (isSerumSgotTest(test)) {
+
+// ====================== BIOCHEMISTRY : LIVER FUNCTION TEST ======================
+else if (isLFT(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
@@ -219,68 +205,15 @@ else if (isSerumSgotTest(test)) {
     const key = makeKey(testKey, f.name);
 
     html += `
-  <label>${f.name}</label>
-
- <input
+      <label>${f.name}</label>
+     <input
   type="text"
-  class="input full-row"
+  class="input full-row lft-input"
   id="${key}"
   inputmode="decimal"
 />
 
-
-`;
-
-  });
-
-  html += `</div>`;
-}
-// ====================== BIOCHEMISTRY : SERUM S G P T TEST ======================
-else if (isSerumSgptTest(test)) {
-
-  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
-
-  test.fields.forEach(f => {
-    const key = makeKey(testKey, f.name);
-
-    html += `
-  <label>${f.name}</label>
-
- <input
-  type="text"
-  class="input full-row"
-  id="${key}"
-  inputmode="decimal"
-/>
-
-
-`;
-
-  });
-
-  html += `</div>`;
-}
-// ====================== BIOCHEMISTRY : SERUM BILIRUBIN TEST ======================
-else if (isSerumBilirubinTest(test)) {
-
-  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
-
-  test.fields.forEach(f => {
-    const key = makeKey(testKey, f.name);
-
-    html += `
-  <label>${f.name}</label>
-
- <input
-  type="text"
-  class="input full-row"
-  id="${key}"
-  inputmode="decimal"
-/>
-
-
-`;
-
+    `;
   });
 
   html += `</div>`;
@@ -390,26 +323,24 @@ const fieldKey = makeFieldKey(testKey, f[0]);
 // 🔒 SGOT hard lock (typing + paste + mobile safe)
 document.addEventListener("input", e => {
   const el = e.target;
-  if (!el.id) return;
 
-  const id = el.id.toLowerCase();
+  if (!el.classList.contains("lft-input")) return;
 
-  if (id.includes("sgot") || id.includes("sgpt") || id.includes("bilirubin")) {
-    let v = el.value;
+  let v = el.value;
 
-    // numbers + one dot only
-    v = v.replace(/[^0-9.]/g, "");
+  // ✅ ONLY digits + single dot
+  v = v.replace(/[^0-9.]/g, "");
 
-    const parts = v.split(".");
-    if (parts.length > 2) {
-      v = parts[0] + "." + parts.slice(1).join("");
-    }
-
-    if (v.startsWith(".")) v = "0" + v;
-
-    el.value = v;
+  const parts = v.split(".");
+  if (parts.length > 2) {
+    v = parts[0] + "." + parts.slice(1).join("");
   }
+
+  if (v.startsWith(".")) v = "0" + v;
+
+  el.value = v;
 });
+
 
   // ====================== SAVE & NEXT ======================
   window.next = () => {
