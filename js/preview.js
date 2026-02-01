@@ -4,7 +4,42 @@ function mmToPx(mm) {
   return mm * MM_TO_PX;
 }
 
+function makeKey(testKey, name) {
+  return `${testKey}_${name}`
+    .replace(/\./g, "")
+    .replace(/\s+/g, "_")
+    .toUpperCase();
+}
+
+
 import Tests from "../tests/index.js";
+
+function checkFlag(result, refList, gender) {
+  if (!result || !refList || refList.length === 0) {
+    return { flag: "" };
+  }
+
+  const value = parseFloat(
+    String(result).replace(/,/g, "")
+  );
+  if (isNaN(value)) return { flag: "" };
+
+  const ref = refList[0];
+  const match = ref.match(
+    /(\d+[,.\d]*)\s*-\s*(\d+[,.\d]*)/
+  );
+  if (!match) return { flag: "" };
+
+  const min = parseFloat(match[1].replace(/,/g, ""));
+  const max = parseFloat(match[2].replace(/,/g, ""));
+
+  if (value < min) return { flag: "L" };
+  if (value > max) return { flag: "H" };
+
+  return { flag: "" };
+}
+
+
 
 const patient = JSON.parse(localStorage.getItem("patient"));
 const report = JSON.parse(localStorage.getItem("report"));
@@ -28,10 +63,25 @@ function isTestOverflow() {
   const testsBottom =
     currentTestsBox.offsetTop + currentTestsBox.offsetHeight;
 
+  // REAL SAFE ZONE = bottom image (38mm) + footer text (~22mm)
+  const SAFE_MM = 60;
+
   const maxAllowed =
-    content.clientHeight - mmToPx(60); // footer safe zone
+    content.offsetHeight - mmToPx(SAFE_MM);
 
   return testsBottom > maxAllowed;
+}
+
+function getSelectClass(value, options = []) {
+  if (!value) return "";
+
+  // ✅ FIRST OPTION = NORMAL
+  if (options.length && value === options[0]) {
+    return "normal-value";
+  }
+
+  // ❌ everything else abnormal
+  return "abnormal-value";
 }
 
 
@@ -117,142 +167,165 @@ function renderTest(testKey) {
       </tr>
     `;
 
-    const dlcList = [
-      "NEUTROPHILS",
-      "LYMPHOCYTES",
-      "EOSINOPHILS",
-      "MONOCYTES",
-      "BASOPHILS"
-    ];
+    const dlcList = ["NEUTROPHILS","LYMPHOCYTES","EOSINOPHILS","MONOCYTES","BASOPHILS"];
 
     test.fields.forEach(f => {
       if (f[0] === "NEUTROPHILS") {
-        html += `
-          <tr class="dlc-heading">
-            <td colspan="4">DIFF. LEUCOCYTE COUNT</td>
-          </tr>
-        `;
+        html += `<tr class="dlc-heading"><td colspan="4">DIFF. LEUCOCYTE COUNT</td></tr>`;
       }
 
-      const isDLC = dlcList.includes(f[0]);
+      const fieldKey = `${testKey}_${f[0].replace(/\s+/g, "_")}`;
+      const result = report[fieldKey] || "";
 
-      let refHTML = f[2].includes("|")
-        ? f[2].split("|").map(r => `<div>${r.trim()}</div>`).join("")
-        : f[2];
+     let flagHTML = "";
+let rowClass = "";
 
-     const fieldKey = `${testKey}_${f[0].replace(/\s+/g, "_")}`;
+if (result && f[2]) {
+  const refList = f[2].split("|").map(r => r.trim());
+  const { flag } = checkFlag(result, refList, patient.gender);
+  if (flag) {
+    flagHTML = ` <span class="flag shift-flag">${flag}</span>`;
+    rowClass = "abnormal-value";
+  }
+}
 
+
+      html += `
+        <tr class="test-row ${dlcList.includes(f[0]) ? "dlc-row" : ""}">
+          <td>${f[0]}</td>
+         <td class="td-result ${rowClass}">
+  <span class="result-value">${result}</span>
+  ${flagHTML}
+</td>
+
+
+          <td class="td-unit">${f[1]}</td>
+          <td class="td-ref">
+  ${f[2].split("|").map(r => `<div>${r.trim()}</div>`).join("")}
+</td>
+
+        </tr>
+      `;
+    });
+  }
+
+  /* ================= BIOCHEMISTRY / SUGAR ================= */
+  else if (typeof test.fields?.[0] === "object") {
+    html += `
+      <tr class="test-title"><th colspan="4">${test.title}</th></tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th><th>RESULT</th><th>UNIT</th><th>REFERENCE RANGE</th>
+      </tr>
+       <tr class="bio-subtitle">
+      <th colspan="4">${test.subtitle}</th>
+    </tr>
+
+    `;
+
+    test.fields.forEach(f => {
+     const fieldKey = makeKey(testKey, f.name);
+
+      const result = report[fieldKey] || "";
+      const isUrine = f.name.toUpperCase().includes("URINE");
+
+    let flagHTML = "";
+let rowClass = "";
+
+
+  if (isUrine) {
+  if (result === "Absent") {
+    rowClass = "normal-value";   // ✅ normal
+  } else if (result) {
+    rowClass = "abnormal-value"; // ❌ anything else = red + bold
+  }
+}
+
+
+
+     else if (result && f.ref) {
+  const { flag } = checkFlag(result, [f.ref], patient.gender);
+  if (flag) {
+    flagHTML = ` <span class="flag shift-flag">${flag}</span>`;
+    rowClass = "abnormal-value";
+  }
+}
+
+
+     // ✅ SUB HEADING ROW (LEFT SIDE, FULL WIDTH)
+if (f.sub) {
+  html += `
+    <tr class="bio-sub-row">
+      <td colspan="4" class="bio-sub-left">
+        ${f.sub}
+      </td>
+    </tr>
+  `;
+}
+
+// ✅ ACTUAL TEST ROW
 html += `
-  <tr class="test-row ${isDLC ? "dlc-row" : ""}">
-    <td class="${isDLC ? "dlc-name" : ""}">${f[0]}</td>
-    <td class="td-result">${report[fieldKey] || ""}</td>
-    <td class="td-unit">${f[1]}</td>
-    <td class="td-ref">${refHTML}</td>
+  <tr class="test-row">
+    <td>${f.name}</td>
+
+    <td class="td-result ${rowClass}">
+      <span class="result-value">${result}</span>
+      ${flagHTML}
+    </td>
+
+    <td class="td-unit">${f.unit}</td>
+    <td class="td-ref">${f.ref}</td>
   </tr>
 `;
+
+
 
     });
   }
 
-  /* ================= BLOOD SUGAR / BIOCHEM ================= */
-  else if (typeof test.fields?.[0] === "object") {
-    html += `
-      <tr class="test-title">
-        <th colspan="4">${test.title}</th>
-      </tr>
-      <tr class="test-head">
-        <th>INVESTIGATION</th>
-        <th>RESULT</th>
-        <th>UNIT</th>
-        <th>REFERENCE RANGE</th>
-        
-      
-    
-    
-        </tr>
-        <th colspan="4" style="
-    text-align: left;
-">${test.subtitle}</th>
+  /* ================= URINE PROFILE ================= */
+  if (test.sections) {
+html += `<table class="urine-table">
+      <tr class="test-title"><th colspan="2">${test.title}</th></tr>
+      <tr class="test-head"><th>INVESTIGATION</th><th>RESULT</th></tr>
     `;
 
-   test.fields.forEach(f => {
+    test.sections.forEach(section => {
+      html += `<tr><th colspan="2">${section.name}</th></tr>`;
 
-  const isUrine = f.name.toUpperCase().includes("URINE");
+      section.fields.forEach(f => {
+        const fieldKey = `${testKey}_${f[0].replace(/\s+/g,"_").toUpperCase()}`;
+        const value = report[fieldKey] || "";
+const options = f[1]?.options || [];
 
-  const nameHTML = f.sub
-    ? `<br><span class="sub-name">${f.sub}</span><br><br>${f.name}`
-    : f.name;
+let cls = "";
 
-  const fieldKey = `${testKey}_${f.name.replace(/\s+/g, "_")}`;
+const alwaysNormalFields = ["QUANTITY", "NATURE", "REACTION"];
 
-  html += `
-    <tr class="test-row ${isUrine ? "urine-row" : ""}">
-      <td class="${isUrine ? "urine-name" : ""}">
-        ${nameHTML}
-      </td>
-      <td class="td-result">${report[fieldKey] || ""}</td>
-      <td class="td-unit">${f.unit}</td>
-      <td class="td-ref">${f.ref}</td>
-    </tr>
-  `;
-});
-
-  }
-
- 
-
-  /* ===== URINE / PROFILE TYPE ===== */
-if (test.sections) {
-  html += `
-    <tr class="test-title">
-      <th colspan="2">${test.title}</th>
-    </tr>
-    <tr class="test-head">
-      <th class="urine-investigation">INVESTIGATION</th>
-      <th class="urine-result-head">RESULT</th>
-    </tr>
-  `;
-
-  test.sections.forEach(section => {
-    html += `
-      <tr class="urine-section">
-        <th colspan="2">${section.name}</th>
-      </tr>
-    `;
-
- section.fields.forEach(f => {
-
-  const fieldKey = `${testKey}_${f[0]
-    .replace(/\./g, "")
-    .replace(/\s+/g, "_")
-    .toUpperCase()}`;
-
-  const value = report[fieldKey];
-  const otherValue = report[fieldKey + "_other"];
-
-  const finalValue =
-    value === "OTHER" ? (otherValue || "") : (value || "");
-
-  html += `
-    <tr class="urine-row">
-      <td class="urine-investigation">
-        ${f[0]}
-      </td>
-      <td class="urine-result">
-        ${finalValue}
-      </td>
-    </tr>
-  `;
-});
-
-
-  });
+if (alwaysNormalFields.includes(f[0].toUpperCase())) {
+  cls = "normal-value";
+} else {
+  cls = getSelectClass(value, options);
 }
 
+
+
+
+
+       html += `
+  <tr>
+    <td>${f[0]}</td>
+    <td class="${cls}">${value}</td>
+  </tr>
+`;
+
+      });
+    });
+  }
 
   html += `</tbody></table>`;
   return html;
 }
+
 /* ================= PAGINATION ================= */
 
 selectedTests.forEach(testKey => {
@@ -287,7 +360,13 @@ function downloadColoredPDF() {
     .set({
       margin: 0,
       filename: `${patient.name}_COLORED.pdf`,
-      jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
+      // jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
+      jsPDF: {
+  unit: "mm",
+  format: "a4",
+  orientation: "portrait"
+},
+
       // html2canvas: {
       //   scale: 2,
       //   useCORS: true,
@@ -323,7 +402,12 @@ function downloadPlainPDF() {
     .set({
       margin: 0,
       filename: `${patient.name}_PLAIN.pdf`,
-      jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
+      // jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
+          jsPDF: {
+  unit: "mm",
+  format: "a4",
+  orientation: "portrait"
+},
       // html2canvas: {
       //   scale: 2,
       //   useCORS: true,
