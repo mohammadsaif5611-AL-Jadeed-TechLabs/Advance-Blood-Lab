@@ -1,6 +1,7 @@
 
 export default {
   title: "URINE ANALYSIS REPORT",
+  testname: "URINE ANALYSIS REPORT",
 
   sections: [
     {
