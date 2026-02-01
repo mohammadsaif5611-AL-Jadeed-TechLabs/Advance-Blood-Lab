@@ -1,5 +1,13 @@
 import Tests from "../tests/index.js";
 
+function makeKey(testKey, name) {
+  return `${testKey}_${name}`
+    .replace(/\./g, "")
+    .replace(/\s+/g, "_")
+    .toUpperCase();
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
 
   // ====================== BASIC DATA ======================
@@ -24,14 +32,50 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // CBC float fields → numbers + single dot
-  window.onlyFloat = function (input) {
-    let value = input.value.replace(/[^0-9.]/g, '');
-    const parts = value.split('.');
-    if (parts.length > 2) {
-      value = parts[0] + '.' + parts[1];
-    }
-    input.value = value;
-  };
+window.onlyIntWithComma = function (input) {
+  let value = input.value.replace(/[^0-9]/g, "");
+  if (value.length > 3) {
+    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+  input.value = value;
+};
+window.onlyFloatDot = function (input) {
+  let value = input.value;
+
+  value = value.replace(/[^0-9.]/g, "");
+
+  const parts = value.split(".");
+  if (parts.length > 2) {
+    value = parts[0] + "." + parts.slice(1).join("");
+  }
+
+  if (value.startsWith(".")) {
+    value = "0" + value;
+  }
+
+  input.value = value;
+};
+
+
+function sanitizeSGOT(value) {
+  if (!value) return "";
+
+  // remove everything except digits & dot
+  value = value.replace(/[^0-9.]/g, "");
+
+  // allow only one dot
+  const parts = value.split(".");
+  if (parts.length > 2) {
+    value = parts[0] + "." + parts.slice(1).join("");
+  }
+
+  // dot se start na ho
+  if (value.startsWith(".")) value = "0" + value;
+
+  return value;
+}
+
+
 
   // ====================== TOGGLE OTHER INPUT (URINE) ======================
   window.toggleOther = function (select) {
@@ -51,6 +95,29 @@ document.addEventListener("DOMContentLoaded", () => {
 const isSugarTest = test =>
   test.title?.toLowerCase().includes("biochemistry") &&
   test.subtitle?.toLowerCase().includes("sugar");
+
+// serum sgot test
+const isSerumSgotTest = test =>
+  test.title?.toLowerCase().includes("biochemistry") &&
+  test.subtitle
+    ?.toLowerCase()
+    .replace(/\./g, "")   // 🔥 dots remove
+    .includes("sgot");
+// serum sgpt test
+const isSerumSgptTest = test =>
+  test.title?.toLowerCase().includes("biochemistry") &&
+  test.subtitle
+    ?.toLowerCase()
+    .replace(/\./g, "")   // 🔥 dots remove
+    .includes("sgpt");
+// serum bilirubin test
+const isSerumBilirubinTest = test =>
+  test.title?.toLowerCase().includes("biochemistry") &&
+  test.subtitle
+    ?.toLowerCase()
+    .replace(/\./g, "")   // 🔥 dots remove
+    .includes("bilirubin");
+
 
 
 
@@ -99,30 +166,30 @@ function makeFieldKey(testKey, fieldName) {
       });
     }
 
+
 // ====================== BIOCHEMISTRY : BLOOD SUGAR TEST ======================
-// ====================== BIOCHEMISTRY : BLOOD SUGAR TEST ======================
-if (isSugarTest(test)) {
+else if  (isSugarTest(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
   test.fields.forEach(f => {
     const name = f.name;
     const sub = f.sub || "";
-    const key = `${testKey}_${name}`.replace(/\s+/g, "_");
+   const key = makeKey(testKey, f.name);
+
 
     // ✅ PARALLEL URINE SUGAR → SELECT
-    if (name.toLowerCase().includes("urine")) {
-      html += `
-        <label>${name}</label>
-        <select class="input full-row" id="${key}">
-          <option value="Absent" selected>Absent</option>
-          <option value="Traces">Traces</option>
-          <option value="Present +">Present +</option>
-          <option value="Present ++">Present ++</option>
-          <option value="Present +++">Present +++</option>
-        </select>
-      `;
-    }
+if (f.type === "select") {
+  html += `
+    <label>${name}</label>
+    <select class="input full-row" id="${key}">
+      ${f.options.map((opt, i) =>
+        `<option value="${opt}" ${i === 0 ? "selected" : ""}>${opt}</option>`
+      ).join("")}
+    </select>
+  `;
+}
+
     // ✅ BLOOD SUGAR INPUT
     else {
       html += `
@@ -143,12 +210,86 @@ if (isSugarTest(test)) {
 
   html += `</div>`;
 }
+// ====================== BIOCHEMISTRY : SERUM S G O T TEST ======================
+else if (isSerumSgotTest(test)) {
 
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+
+    html += `
+  <label>${f.name}</label>
+
+ <input
+  type="text"
+  class="input full-row"
+  id="${key}"
+  inputmode="decimal"
+/>
+
+
+`;
+
+  });
+
+  html += `</div>`;
+}
+// ====================== BIOCHEMISTRY : SERUM S G P T TEST ======================
+else if (isSerumSgptTest(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+
+    html += `
+  <label>${f.name}</label>
+
+ <input
+  type="text"
+  class="input full-row"
+  id="${key}"
+  inputmode="decimal"
+/>
+
+
+`;
+
+  });
+
+  html += `</div>`;
+}
+// ====================== BIOCHEMISTRY : SERUM BILIRUBIN TEST ======================
+else if (isSerumBilirubinTest(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+
+    html += `
+  <label>${f.name}</label>
+
+ <input
+  type="text"
+  class="input full-row"
+  id="${key}"
+  inputmode="decimal"
+/>
+
+
+`;
+
+  });
+
+  html += `</div>`;
+}
 
 
 // ====================== NORMAL TESTS (CBC etc.) ======================
 else if (test.fields) {
-  html += `<h5 class="mt-3 mb-2">${test.title} Values</h5><div class="grid">`;
+  html += `<h5 class="mt-3 mb-2">${test.testname} Values</h5><div class="grid">`;
 
   test.fields.forEach(f => {
     html += renderField(test, testKey, f);
@@ -187,7 +328,7 @@ else if (test.fields) {
              class="input full-row"
              id="${key}"
              inputmode="numeric"
-             oninput="onlyIntWithComma(this)">
+            oninput="onlyIntWithComma(this)">
     `;
   }
 
@@ -197,7 +338,7 @@ else if (test.fields) {
            class="input full-row"
            id="${key}"
            inputmode="decimal"
-           oninput="onlyFloat(this)">
+           oninput="onlyFloatDot(this)">
   `;
 }
 
@@ -216,11 +357,13 @@ const fieldKey = makeFieldKey(testKey, f[0]);
             ).join("")}
             <option value="OTHER">Other</option>
           </select>
-          <input type="text"
-                 class="input full-row"
-                 id="${key}_other"
-                 placeholder="Specify ${f[0]}"
-                 style="display:none">
+         <input
+  type="text"
+  class="input full-row"
+  id="${fieldKey}_other"
+  placeholder="Specify ${f[0]}"
+  style="display:none">
+
         `;
       }
 
@@ -244,11 +387,57 @@ const fieldKey = makeFieldKey(testKey, f[0]);
     `;
   }
 
+// 🔒 SGOT hard lock (typing + paste + mobile safe)
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (!el.id) return;
+
+  const id = el.id.toLowerCase();
+
+  if (id.includes("sgot") || id.includes("sgpt") || id.includes("bilirubin")) {
+    let v = el.value;
+
+    // numbers + one dot only
+    v = v.replace(/[^0-9.]/g, "");
+
+    const parts = v.split(".");
+    if (parts.length > 2) {
+      v = parts[0] + "." + parts.slice(1).join("");
+    }
+
+    if (v.startsWith(".")) v = "0" + v;
+
+    el.value = v;
+  }
+});
+
   // ====================== SAVE & NEXT ======================
   window.next = () => {
-    document.querySelectorAll("input, select").forEach(el => {
-      if (el.id) data[el.id] = el.value;
-    });
+   document.querySelectorAll("select").forEach(sel => {
+  if (!sel.id) return;
+
+  if (sel.value === "OTHER") {
+    const otherInput = document.getElementById(sel.id + "_other");
+    if (otherInput && otherInput.value.trim() !== "") {
+      data[sel.id] = otherInput.value.trim(); // ✅ REAL VALUE
+    } else {
+      data[sel.id] = "OTHER";
+    }
+  } else {
+    data[sel.id] = sel.value;
+  }
+});
+
+document.querySelectorAll("input").forEach(inp => {
+  if (
+    inp.id &&
+    !inp.id.endsWith("_other") &&
+    inp.type !== "select-one"   // 🔥 IMPORTANT
+  ) {
+    data[inp.id] = inp.value;
+  }
+});
+
 
     localStorage.setItem("report", JSON.stringify(data));
     location.href = "preview.html";
