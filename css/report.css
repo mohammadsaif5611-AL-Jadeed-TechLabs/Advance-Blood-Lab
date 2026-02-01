@@ -11,6 +11,10 @@ html, body {
   padding: 0;
   height: 100%;
 }
+@page {
+  size: A4;
+  margin: 0;
+}
 
 
 body {
@@ -26,15 +30,16 @@ body {
 }
 
 #pdf {
-  width: 243mm;
+  /* width: 243mm; */
+  width: 210mm;
   margin: auto;
 }
 
 /* ================= PAGE ================= */
 .page {
   width: 100%;
-  /* height: 297mm;   */
-  height: 320mm;  
+  height: 297mm;  
+  /* height: 320mm;   */
   position: relative;
   overflow: hidden;  
 
@@ -92,7 +97,7 @@ body {
 .footer {
   position: relative;
   margin-top: 0mm;
-  font-size: 16px;
+  font-size: 15px;
   z-index: 2;
   page-break-inside: avoid;
 }
@@ -128,7 +133,7 @@ body {
     url("../assets/top.jpeg") top center no-repeat,
     url("../assets/bottom.jpeg") bottom center no-repeat;
   background-size:
-    100% 54mm,
+    100% 68mm,
     100% 38mm;
   z-index: 0;
    image-rendering: auto;
@@ -147,22 +152,16 @@ body {
 }
 
 /* ================= CONTENT ================= */
-/* .page-content {
-  position: relative;
-  z-index: 1;
-  padding: 52mm 18mm 38mm;
-  box-sizing: border-box;
-  height: 100%;
-} */
+
 
 .page-content {
   position: relative;
   z-index: 1;
 
   padding-top: 60mm;     /* top image */
-  padding-left: 23mm;
-  padding-right: 22mm;
-  padding-bottom: 48mm;  /* bottom image */
+  padding-left: 13mm;
+  padding-right: 13mm;
+  padding-bottom: 68mm;  /* bottom image */
 
   height: 100%;
   box-sizing: border-box;
@@ -211,7 +210,7 @@ body {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 16px;   /* 🎯 jsPDF match */
+  font-size: 15px;   /* 🎯 jsPDF match */
  
   page-break-inside: avoid;
 
@@ -220,14 +219,14 @@ table {
 
 th {
   font-weight: 700;
-  text-align: center;
+  text-align: left;
   padding: 4px 4px;
   line-height: 1.25;
 }
 
 td {
     padding: 4px 4px;
-    line-height: 1;
+    line-height: 1.2;
     /* letter-spacing: 1px; */
 }
 
@@ -236,7 +235,7 @@ td {
 /* ================= PATIENT ================= */
 .patient {
   height: 20mm;
-  font-size: 16px;     /* 🎯 exact */
+  font-size: 15px;     /* 🎯 exact */
   line-height: 1.55;    /* 🎯 row gap */
   margin-bottom: 5mm;
 }
@@ -314,7 +313,7 @@ table {
 
 /* ===== TEST TITLE ===== */
 .test-title th {
-  font-size: 16.3px;
+  font-size: 17.3px;
   font-weight: 700;
   text-align: center;
   padding: 6px 0;
@@ -327,24 +326,25 @@ table {
  
 }
 .test-head th {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   /* border: 1px solid #000; */
   padding: 6px 6px;
 }
 
 /* COLUMN ALIGNMENT */
-.test-head th:nth-child(1) { text-align: left; padding-left: 8px; }
-.test-head th:nth-child(2) { text-align: left; width: 18%; }
-.test-head th:nth-child(3) { text-align: left; width: 16%; }
-.test-head th:nth-child(4) { text-align: left; width: 26%; }
+.test-head th:nth-child(1) { width: 40%; }
+.test-head th:nth-child(2) { width: 8%; }
+.test-head th:nth-child(3) { width: 18%; }
+.test-head th:nth-child(4) { width: 30%; }
+
 
 /* ===== TABLE ROWS ===== */
 .test-row td {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 15px;
+    /* font-weight: 500; */
     /* border: 1px solid #000; */
-    padding: 5px 6px;
+    padding: 2px 6px;
 }
 
 /* BODY COLUMN ALIGN */
@@ -356,9 +356,9 @@ table {
 }
 
 /* RESULT LOOK (OPTIONAL BOLD LIKE REPORT) */
-.td-result {
+/* .td-result {
   font-weight: 600;
-}
+} */
 
 /* DLC indentation */
 .test-row.dlc-row td:first-child {
@@ -366,7 +366,7 @@ table {
 }
 /* DLC heading */
 .dlc-heading td {
-  font-weight: 700;
+  /* font-weight: 700; */
   padding: 6px 8px;
   /* border: 1px solid #000; */
   /* background: #fff; */
@@ -401,3 +401,92 @@ table {
   font-weight: bold;
   padding: 6px 10px;
 }
+
+.td-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* value part */
+.result-value {
+  display: inline-block;
+  min-width: 55px;   /* 🔥 value column width fix */
+}
+
+/* flag */
+.flag {
+  display: inline-block;
+  min-width: 50px;
+  text-align: left;
+  margin-left: 6px;
+}
+
+ /* flag  */
+ .flag {
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.flag:contains("H"),
+.flag:contains("L") {
+  color: red;
+}
+
+.urine-abnormal {
+  color: red;
+  font-weight: bold;
+}
+
+.urine-normal {
+  color: #000;
+  font-weight: normal;
+}
+
+
+.normal-value {
+  color: #000;
+  font-weight: normal;
+}
+
+.abnormal-value {
+  color: #c00000;
+  font-weight: 750;
+}
+
+/* .flag {
+  font-size: 0.85em;
+} */
+
+.shift-flag {
+  margin-left: 6px;
+}
+/* ✅ ONLY URINE RESULT COLUMN */
+.urine-table {
+  table-layout: fixed;
+}
+
+.urine-table td:nth-child(1) {
+  width: 60%;
+}
+
+.urine-table td:nth-child(2) {
+  width: 40%;
+  padding-left: 0;
+  text-align: left;
+}
+
+
+/* BIOCHEM SUB HEADING GAP FIX */
+.bio-subtitle th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-weight: 600;
+  text-align: left;
+}
+.bio-sub-row td {
+  padding: 6px 8px;
+  /* font-weight: 600; */
+  text-align: left;
+}
+
