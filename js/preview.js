@@ -1,5 +1,8 @@
 const MM_TO_PX = 3.78; // 96dpi standard
 
+let liverHeaderPrinted = false;
+
+
 function mmToPx(mm) {
   return mm * MM_TO_PX;
 }
@@ -145,6 +148,8 @@ content.id = "page-content";
 
   currentPage.appendChild(content);
   pdf.appendChild(currentPage);
+  liverHeaderPrinted = false;
+
 }
 
 
@@ -209,78 +214,116 @@ if (result && f[2]) {
     });
   }
 
-  /* ================= BIOCHEMISTRY / SUGAR ================= */
-  else if (typeof test.fields?.[0] === "object") {
-    html += `
-      <tr class="test-title"><th colspan="4">${test.title}</th></tr>
-      <tr class="test-head">
-        <th>INVESTIGATION</th><th>RESULT</th><th>UNIT</th><th>REFERENCE RANGE</th>
-      </tr>
-       <tr class="bio-subtitle">
+/* ================= BIOCHEMISTRY / SUGAR ================= */
+else if (
+  test.title === "BIOCHEMISTRY REPORT" &&
+  test.subtitle &&
+  !test.class   // ❌ LFT ko exclude
+) {
+
+  html += `
+    <tr class="test-title"><th colspan="4">${test.title}</th></tr>
+    <tr class="test-head">
+      <th>INVESTIGATION</th><th>RESULT</th><th>UNIT</th><th>REFERENCE RANGE</th>
+    </tr>
+    <tr class="bio-subtitle">
       <th colspan="4">${test.subtitle}</th>
     </tr>
+  `;
 
-    `;
-
-    test.fields.forEach(f => {
-     const fieldKey = makeKey(testKey, f.name);
-
-      const result = report[fieldKey] || "";
-      const isUrine = f.name.toUpperCase().includes("URINE");
+  test.fields.forEach(f => {
+    const fieldKey = makeKey(testKey, f.name);
+    const result = report[fieldKey] || "";
+    const isUrine = f.name.toUpperCase().includes("URINE");
 
     let flagHTML = "";
-let rowClass = "";
+    let rowClass = "";
 
+    // ✅ URINE SUGAR LOGIC
+    if (isUrine) {
+      if (result === "Absent") rowClass = "normal-value";
+      else if (result) rowClass = "abnormal-value";
+    }
+    // ✅ NORMAL BIOCHEM FLAG
+    else if (result && f.ref) {
+      const { flag } = checkFlag(result, [f.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
 
-  if (isUrine) {
-  if (result === "Absent") {
-    rowClass = "normal-value";   // ✅ normal
-  } else if (result) {
-    rowClass = "abnormal-value"; // ❌ anything else = red + bold
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
+}
+/* ================= LIVER FUNCTION TEST ================= */
+else if (test.class === "LIVER FUNCTION TEST") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  if (!liverHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">BIOCHEMISTRY REPORT</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+      <tr class="bio-subtitle">
+        <th colspan="4">LIVER FUNCTION TEST</th>
+      </tr>
+    `;
+    liverHeaderPrinted = true;
   }
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
 }
 
-
-
-     else if (result && f.ref) {
-  const { flag } = checkFlag(result, [f.ref], patient.gender);
-  if (flag) {
-    flagHTML = ` <span class="flag shift-flag">${flag}</span>`;
-    rowClass = "abnormal-value";
-  }
-}
-
-
-     // ✅ SUB HEADING ROW (LEFT SIDE, FULL WIDTH)
-if (f.sub) {
-  html += `
-    <tr class="bio-sub-row">
-      <td colspan="4" class="bio-sub-left">
-        ${f.sub}
-      </td>
-    </tr>
-  `;
-}
-
-// ✅ ACTUAL TEST ROW
-html += `
-  <tr class="test-row">
-    <td>${f.name}</td>
-
-    <td class="td-result ${rowClass}">
-      <span class="result-value">${result}</span>
-      ${flagHTML}
-    </td>
-
-    <td class="td-unit">${f.unit}</td>
-    <td class="td-ref">${f.ref}</td>
-  </tr>
-`;
-
-
-
-    });
-  }
 
   /* ================= URINE PROFILE ================= */
   if (test.sections) {
