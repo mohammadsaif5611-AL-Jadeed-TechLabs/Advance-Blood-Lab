@@ -1,6 +1,23 @@
 const MM_TO_PX = 3.78; // 96dpi standard
 
-let liverHeaderPrinted = false;
+const serologyGroup = [];
+
+
+window.liverHeaderPrinted = false;
+window.serologyHeaderPrinted = false;
+window.kidneyHeaderPrinted = false;
+window.crpHeaderPrinted = false;
+
+
+
+
+
+
+
+
+const selectedSerology =
+  JSON.parse(localStorage.getItem("selectedSerology")) || {};
+
 
 
 function mmToPx(mm) {
@@ -9,9 +26,103 @@ function mmToPx(mm) {
 
 function makeKey(testKey, name) {
   return `${testKey}_${name}`
-    .replace(/\./g, "")
-    .replace(/\s+/g, "_")
+    .replace(/[^\w]/g, "_")
+    .replace(/_+/g, "_")
     .toUpperCase();
+}
+
+
+
+
+function renderSerologyGroup() {
+  if (!serologyGroup.length) return;
+
+  serologyGroup.forEach(testKey => {
+    const test = Tests[testKey];
+    const selectedIndexes = selectedSerology[testKey] || [];
+    if (!selectedIndexes.length) return;
+
+    selectedIndexes.forEach(index => {
+
+      const section = test.sections[index];
+      if (!section) return;
+
+      // 🔎 check any value
+      const hasValue = section.fields.some(([name]) =>
+        report[makeKey(testKey, name)]
+      );
+      if (!hasValue) return;
+
+      if (!currentPage) newPage();
+
+      // 🔹 section block (atomic)
+      const block = document.createElement("div");
+      block.className = "test-block serology-block";
+      block.style.pageBreakInside = "avoid";
+
+      let html = `
+        <table>
+          <tr class="test-title">
+            <th colspan="2">${test.title}</th>
+          </tr>
+          <tr class="test-head">
+            <th>INVESTIGATION</th>
+          <th style="
+    width: 40%;
+">RESULT</th>
+          </tr>
+          <tr class="bio-subtitle">
+            <th colspan="2">${section.name}</th>
+          </tr>
+      `;
+
+      section.fields.forEach(([name]) => {
+        const value = report[makeKey(testKey, name)];
+        if (!value) return;
+
+        html += `
+          <tr class="test-row">
+            <td>${name}</td>
+            <td class="td-result">
+              <span class="result-value">${value}</span>
+            </td>
+          </tr>
+        `;
+      });
+
+      section.sub?.forEach(s => {
+        html += `
+          <tr class="bio-sub-row">
+            <td colspan="2">${s}</td>
+          </tr>
+        `;
+      });
+
+      section.para?.forEach(p => {
+        html += `
+          <tr class="bio-para-row">
+            <td colspan="2">${p}</td>
+          </tr>
+        `;
+      });
+
+      html += `</table>`;
+      block.innerHTML = html;
+
+      currentTestsBox.appendChild(block);
+
+      // 🔥 overflow → move whole section
+      if (isTestOverflow()) {
+        currentTestsBox.removeChild(block);
+        newPage();
+
+        // ✅ repeat header
+        window.serologyHeaderPrinted = false;
+
+        currentTestsBox.appendChild(block);
+      }
+    });
+  });
 }
 
 
@@ -148,7 +259,13 @@ content.id = "page-content";
 
   currentPage.appendChild(content);
   pdf.appendChild(currentPage);
-  liverHeaderPrinted = false;
+
+
+liverHeaderPrinted = false;
+window.serologyHeaderPrinted = false;
+window.kidneyHeaderPrinted = false;
+window.crpHeaderPrinted = false;
+
 
 }
 
@@ -323,47 +440,350 @@ else if (test.class === "LIVER FUNCTION TEST") {
     `;
   });
 }
+/* ================= KIDNEY FUNCTION TEST ================= */
+else if (test.class === "KIDNEY FUNCTION TEST") {
+
+  const hasValue = test.fields.some(f => {
+    if (f.sub) return false;
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  // ✅ Independent header flag for KFT
+  if (!window.kidneyHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">BIOCHEMISTRY REPORT</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+      <tr class="bio-subtitle">
+        <th colspan="4">KIDNEY FUNCTION TEST</th>
+      </tr>
+    `;
+    window.kidneyHeaderPrinted = true;
+  }
+
+  test.fields.forEach(f => {
+
+   if (f.sub) {
+  html += `
+    <tr class="bio-sub-row">
+      <td colspan="4" class="bio-sub-left" style="font-weight:600;">
+        ${f.sub}
+      </td>
+    </tr>
+  `;
+  return;
+}
 
 
-  /* ================= URINE PROFILE ================= */
-  if (test.sections) {
-html += `<table class="urine-table">
-      <tr class="test-title"><th colspan="2">${test.title}</th></tr>
-      <tr class="test-head"><th>INVESTIGATION</th><th>RESULT</th></tr>
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
+}
+
+/* ================= SEROLOGY : CRP & RA TEST ================= */
+else if (test.class === "CRP SEROLOGY TEST") {
+
+  // 🔎 Check if any value entered
+  const hasValue = test.fields.some(f => {
+    if (!f.name) return false;
+    const k = makeKey(testKey, f.name);
+    return report.hasOwnProperty(k) && report[k] !== "";
+  });
+
+  if (!hasValue) return "";
+
+  // ✅ Header (ONLY ONCE)
+  if (!window.crpHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">${test.title}</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+    `;
+    window.crpHeaderPrinted = true;
+  }
+
+  /* ================= CRP SECTION ================= */
+
+  const crpField = test.fields.find(
+    f =>
+      f.name &&
+      (
+        f.name.toUpperCase().includes("C REACTIVE") ||
+        f.name.toUpperCase().includes("CRP")
+      )
+  );
+
+  const crpKey = crpField && makeKey(testKey, crpField.name);
+  const crpValue =
+    crpKey && report.hasOwnProperty(crpKey)
+      ? report[crpKey]
+      : "";
+
+  // ✅ IMPORTANT: value empty ho to skip row
+  if (crpKey && crpValue !== "") {
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (crpField.ref) {
+      const { flag } = checkFlag(crpValue, [crpField.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${crpField.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${crpValue}</span>
+          ${flagHTML}
+        </td>
+        <td>${crpField.unit}</td>
+        <td>${crpField.ref} ${crpField.unit}</td>
+      </tr>
     `;
 
-    test.sections.forEach(section => {
-      html += `<tr><th colspan="2">${section.name}</th></tr>`;
+    // 🔹 CRP sub / para
+    test.fields.forEach(f => {
+      if (f.sub && !f.name && !f.sub.includes("RA")) {
+        html += `
+          <tr class="bio-sub-row">
+            <td colspan="4">${f.sub}</td>
+          </tr>
+        `;
+      }
+      if (f.para) {
+        html += `
+          <tr class="bio-para-row">
+            <td colspan="4">${f.para}</td>
+          </tr>
+        `;
+      }
+    });
+  }
 
-      section.fields.forEach(f => {
-        const fieldKey = `${testKey}_${f[0].replace(/\s+/g,"_").toUpperCase()}`;
-        const value = report[fieldKey] || "";
-const options = f[1]?.options || [];
+  /* ================= RA SECTION ================= */
 
-let cls = "";
+  const raField = test.fields.find(
+    f => f.name && f.name.toUpperCase().includes("RHEUMATOID")
+  );
 
-const alwaysNormalFields = ["QUANTITY", "NATURE", "REACTION"];
+  const raKey = raField && makeKey(testKey, raField.name);
+  const raValue =
+    raKey && report.hasOwnProperty(raKey)
+      ? report[raKey]
+      : "";
 
-if (alwaysNormalFields.includes(f[0].toUpperCase())) {
-  cls = "normal-value";
-} else {
-  cls = getSelectClass(value, options);
+  // ✅ SAME FIX FOR RA
+  if (raKey && raValue !== "") {
+
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="4">RHEUMATOID FACTOR (RA)</th>
+      </tr>
+    `;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (raField.ref) {
+      const { flag } = checkFlag(raValue, [raField.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${raField.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${raValue}</span>
+          ${flagHTML}
+        </td>
+        <td>${raField.unit}</td>
+        <td>${raField.ref} ${raField.unit}</td>
+      </tr>
+    `;
+
+    // 🔹 RA method
+    test.fields.forEach(f => {
+      if (f.sub && f.sub.includes("Immunoturbidometry")) {
+        html += `
+          <tr class="bio-sub-row">
+            <td colspan="4">${f.sub}</td>
+          </tr>
+        `;
+      }
+    });
+  }
+}
+
+/* ================= SEROLOGY : ALL TEST (PREVIEW) ================= */
+else if (test.class === "SEROLOGY TEST") {
+
+  let hasAnyData = false;
+  let htmlParts = [];
+
+  const selectedIndexes = selectedSerology[testKey] || [];
+
+  selectedIndexes.forEach(index => {
+
+    const section = test.sections[index];
+    if (!section) return;
+
+    // check any value
+    const hasValue = section.fields.some(([name]) =>
+      report[makeKey(testKey, name)]
+    );
+    if (!hasValue) return;
+
+    if (!hasAnyData) {
+      htmlParts.push(`
+        <table>
+          <tr class="test-title">
+            <th colspan="2">${test.title}</th>
+          </tr>
+          <tr class="test-head">
+            <th>INVESTIGATION</th>
+            <th>RESULT</th>
+          </tr>
+      `);
+      hasAnyData = true;
+    }
+
+    htmlParts.push(`
+      <tr class="bio-subtitle">
+        <th colspan="2">${section.name}</th>
+      </tr>
+    `);
+
+    section.fields.forEach(([name]) => {
+      const value = report[makeKey(testKey, name)];
+      if (!value) return;
+
+      htmlParts.push(`
+        <tr class="test-row">
+          <td>${name}</td>
+          <td class="td-result">
+            <span class="result-value">${value}</span>
+          </td>
+        </tr>
+      `);
+    });
+
+    section.sub?.forEach(s => {
+      htmlParts.push(`
+        <tr class="bio-sub-row">
+          <td colspan="2">${s}</td>
+        </tr>
+      `);
+    });
+
+    section.para?.forEach(p => {
+      htmlParts.push(`
+        <tr class="bio-para-row">
+          <td colspan="2">${p}</td>
+        </tr>
+      `);
+    });
+  });
+
+  if (!hasAnyData) return "";
+
+  htmlParts.push(`</table>`);
+  html += htmlParts.join("");
 }
 
 
 
 
+/* ================= URINE PROFILE ================= */
+else if (test.class === "URINE PROFILE") {
 
-       html += `
-  <tr>
-    <td>${f[0]}</td>
-    <td class="${cls}">${value}</td>
-  </tr>
-`;
+  html += `<table class="urine-table">
+    <tr class="test-title"><th colspan="2">${test.title}</th></tr>
+    <tr class="test-head">
+      <th>INVESTIGATION</th>
+      <th >RESULT</th>
+    </tr>
+  `;
 
-      });
+  test.sections.forEach(section => {
+    html += `<tr><th colspan="2">${section.name}</th></tr>`;
+
+    section.fields.forEach(f => {
+      const fieldKey =
+        makeKey(testKey, f[0])
+
+
+      const value = report[fieldKey] || "";
+      const options = f[1]?.options || [];
+
+      let cls = "";
+      const alwaysNormalFields = ["QUANTITY","NATURE","REACTION"];
+
+      if (alwaysNormalFields.includes(f[0].toUpperCase())) {
+        cls = "normal-value";
+      } else {
+        cls = getSelectClass(value, options);
+      }
+
+      if (!value) return; // 🔥 empty fields skip
+
+      html += `
+        <tr>
+          <td>${f[0]}</td>
+          <td class="${cls}">${value}</td>
+        </tr>
+      `;
     });
-  }
+  });
+
+  html += `</table>`;
+}
+
 
   html += `</tbody></table>`;
   return html;
@@ -372,20 +792,43 @@ if (alwaysNormalFields.includes(f[0].toUpperCase())) {
 /* ================= PAGINATION ================= */
 
 selectedTests.forEach(testKey => {
+
+  const test = Tests[testKey];
+
+  if (test.class === "SEROLOGY TEST") {
+    serologyGroup.push(testKey);
+    return;
+  }
+
   if (!currentPage) newPage();
 
   const block = document.createElement("div");
-  block.className = "test-block";
-  block.innerHTML = renderTest(testKey);
+  block.className = "test-block serology-block category-block";
 
+  const html = renderTest(testKey);
+  if (!html) return;
+
+  block.innerHTML = html;
   currentTestsBox.appendChild(block);
 
   if (isTestOverflow()) {
     currentTestsBox.removeChild(block);
     newPage();
     currentTestsBox.appendChild(block);
+
+    window.liverHeaderPrinted = false;
+    window.serologyHeaderPrinted = false;
+    window.kidneyHeaderPrinted = false;
+    window.crpHeaderPrinted = false;
   }
 });
+
+// ✅ IMPORTANT
+window.serologyHeaderPrinted = false;
+window.crpHeaderPrinted = false;
+
+renderSerologyGroup();
+
 
 
 /* ===== REMOVE EMPTY PAGES ===== */
