@@ -124,6 +124,28 @@ body {
     padding-right: 9mm;
     margin-top: -2px;
 }
+
+
+.serology-block,
+.inner-serology,
+.no-page-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.test-block,
+.serology-block,
+.no-page-break,
+.inner-serology {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.serology-section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+
 /* ================= TEMPLATE ================= */
 .page::before {
   content: "";
@@ -490,3 +512,20 @@ table {
   text-align: left;
 }
 
+/* ================= ATOMIC CATEGORY BLOCK ================= */
+.category-block {
+  display: block;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* force table + header together */
+.category-block table {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* prevent footer overlap */
+.category-block:last-child {
+  margin-bottom: 8mm;
+}
