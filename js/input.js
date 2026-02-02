@@ -1,14 +1,21 @@
 import Tests from "../tests/index.js";
 
-
-
-
 function makeKey(testKey, name) {
   return `${testKey}_${name}`
-    .replace(/\./g, "")
-    .replace(/\s+/g, "_")
+    .replace(/[^\w]/g, "_")
+    .replace(/_+/g, "_")
     .toUpperCase();
 }
+
+
+
+// function makeKey(testKey, name) {
+//   return `${testKey}_${name}`
+//     .replace(/[^\w]/g, "_")
+//     .replace(/_+/g, "_")
+//     .toUpperCase();
+// }
+
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,13 +33,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ====================== STRICT INPUT HANDLERS (CBC) ======================
 
   // TLC & Platelets → numbers + commas
-  window.onlyIntWithComma = function (input) {
-    let value = input.value.replace(/[^0-9]/g, '');
-    if (value) {
-      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-    input.value = value;
-  };
+  // window.onlyIntWithComma = function (input) {
+  //   let value = input.value.replace(/[^0-9]/g, '');
+  //   if (value) {
+  //     value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  //   }
+  //   input.value = value;
+  // };
 
   // CBC float fields → numbers + single dot
 window.onlyIntWithComma = function (input) {
@@ -104,6 +111,18 @@ const isSugarTest = test =>
 const isLFT = test =>
   String(test.class || "").toUpperCase() === "LIVER FUNCTION TEST";
 
+  // BIOCHEM---KIDNEYFUNCTION
+const isKFT = test =>
+  String(test.class || "").toUpperCase() === "KIDNEY FUNCTION TEST";
+
+  // SEROLOGY ---CRP
+const isCRP = test =>
+  String(test.class || "").toUpperCase() === "CRP SEROLOGY TEST";
+
+  // SEROLOGY ---CRP
+const isSEROLOGY = test =>
+  String(test.class || "").toUpperCase() === "SEROLOGY TEST";
+
 
 
   // CBC test detection
@@ -117,12 +136,12 @@ const isLFT = test =>
     field.includes("platelet");
 
 
-function makeFieldKey(testKey, fieldName) {
-  return `${testKey}_${fieldName
-    .replace(/\./g, "")
-    .replace(/\s+/g, "_")
-    .toUpperCase()}`;
-}
+// function makeFieldKey(testKey, fieldName) {
+//   return `${testKey}_${fieldName
+//     .replace(/\./g, "")
+//     .replace(/\s+/g, "_")
+//     .toUpperCase()}`;
+// }
 
   // ====================== RENDER TESTS ======================
 
@@ -138,8 +157,34 @@ function makeFieldKey(testKey, fieldName) {
 
     let html = `<div class="card p-3">`;
 
+    // ====================== SEROLOGY : CRP & RA TEST (FORM) ======================
+if (isCRP(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5>
+           <div class="grid">`;
+
+ test.fields.forEach(f => {
+  if (!f.name) return;
+  const key = makeKey(testKey, f.name);
+
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+
     // ====================== TEST SECTIONS ======================
-    if (test.sections) {
+  else if (test.sections && !isSEROLOGY(test)) {
+
       test.sections.forEach(section => {
         html += `<h5 class="mt-3 mb-2">${section.name}</h5><div class="grid">`;
 
@@ -186,8 +231,8 @@ if (f.type === "select") {
           type="text"
           class="input full-row"
           id="${key}"
-          inputmode="decimal"
-          oninput="onlyFloat(this)"
+           inputmode="decimal"
+           oninput="onlyFloatDot(this)""
         >
       `;
     }
@@ -218,10 +263,111 @@ else if (isLFT(test)) {
 
   html += `</div>`;
 }
+// ====================== BIOCHEMISTRY : KIDNEY FUNCTION TEST ======================
+else if (isKFT(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+
+   
+   // ====================== SEROLOGY : ALL TEST (FORM) ======================
+// ====================== SEROLOGY : MULTI CHECKBOX FORM ======================
+else if (isSEROLOGY(test)) {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.subtitle}</h5>
+    <div class="full-row"><b>Select Serology Tests</b></div>
+  `;
+
+  // 🔹 checkbox list
+  test.sections.forEach((section, index) => {
+    html += `
+      <label class="full-row">
+
+      
+
+        <input type="checkbox"
+               class="sero-check"
+               data-test="${testKey}"
+               data-index="${index}">
+        ${section.name}
+      </label>
+    `;
+  });
+
+  html += `<div class="">`;
+
+  // 🔹 hidden forms
+  test.sections.forEach((section, index) => {
+
+    html += `
+      <div class="serology-section"
+           data-test="${testKey}"
+           data-index="${index}"
+           style="display:none">
+
+        <div class="full-row sub-heading">${section.name}</div>
+    `;
+
+    section.fields.forEach(([name, config]) => {
+
+      const key = makeKey(testKey, name);
+
+      if (config.type === "select") {
+        html += `
+          <label>${name}</label>
+          <select class="input full-row" id="${key}">
+            <option value=""></option>
+            ${config.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+          </select>
+        `;
+      } else {
+        html += `
+          <label>${name}</label>
+          <input type="text"
+                 class="input full-row"
+                 id="${key}">
+        `;
+      }
+    });
+
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+}
 
 
 // ====================== NORMAL TESTS (CBC etc.) ======================
-else if (test.fields) {
+else if (test.fields && !isCRP(test)) {
+
   html += `<h5 class="mt-3 mb-2">${test.testname} Values</h5><div class="grid">`;
 
   test.fields.forEach(f => {
@@ -244,7 +390,8 @@ else if (test.fields) {
   const unit = f.unit || f[1];
   const type = f.type || "text";
 
-  const key = `${testKey}_${fieldName}`.replace(/\s+/g, "_");
+ const key = makeKey(testKey, fieldName);
+
 
     // const key = `${testKey}_${f[0]}`;
     // const fieldName = f[0].toLowerCase();
@@ -279,7 +426,8 @@ else if (test.fields) {
 
     // ====================== URINE ANALYSIS FIELDS ======================
     if (test.title.toLowerCase().includes("urine")) {
-const fieldKey = makeFieldKey(testKey, f[0]);
+const fieldKey = makeKey(testKey, f[0]);
+
       // If URINE.js field is defined as SELECT with options
       if (typeof f[1] === "object" && f[1].type === "select") {
         return `
@@ -342,6 +490,50 @@ document.addEventListener("input", e => {
 });
 
 
+
+document.addEventListener("change", e => {
+
+  let selectedSerology =
+  JSON.parse(localStorage.getItem("selectedSerology")) || {};
+
+
+  if (!e.target.classList.contains("sero-check")) return;
+
+  const testKey = e.target.dataset.test;
+  const index = e.target.dataset.index;
+
+  selectedSerology[testKey] = selectedSerology[testKey] || [];
+
+  const section = document.querySelector(
+    `.serology-section[data-test="${testKey}"][data-index="${index}"]`
+  );
+
+  if (e.target.checked) {
+    section.style.display = "grid";
+
+    if (!selectedSerology[testKey].includes(index)) {
+      selectedSerology[testKey].push(index);
+    }
+
+  } else {
+    section.style.display = "none";
+
+    // ❌ data clear
+    section.querySelectorAll("input, select").forEach(el => {
+      el.value = "";
+    });
+
+    selectedSerology[testKey] =
+      selectedSerology[testKey].filter(i => i !== index);
+  }
+
+  localStorage.setItem(
+    "selectedSerology",
+    JSON.stringify(selectedSerology)
+  );
+});
+
+
   // ====================== SAVE & NEXT ======================
   window.next = () => {
    document.querySelectorAll("select").forEach(sel => {
@@ -369,6 +561,12 @@ document.querySelectorAll("input").forEach(inp => {
   }
 });
 
+localStorage.setItem(
+  "selectedSerology",
+  JSON.stringify(
+    JSON.parse(localStorage.getItem("selectedSerology")) || {}
+  )
+);
 
     localStorage.setItem("report", JSON.stringify(data));
     location.href = "preview.html";
