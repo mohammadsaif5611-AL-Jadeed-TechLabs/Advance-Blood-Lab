@@ -16,6 +16,50 @@ function makeKey(testKey, name) {
 //     .toUpperCase();
 // }
 
+function renderSerologyFields(fields = [], subtitles = []) {
+
+  // 🔹 subtitles
+  (subtitles || []).forEach(s => {
+    html += `
+      <div class="full-row bio-subtitle">${s}</div>
+    `;
+  });
+
+  // 🔹 fields
+  fields.forEach(f => {
+
+    const name   = f.name || f[0];
+    const config = f.type ? f : (f[1] || {});
+    const key = makeKey(testKey, name);
+
+    if (config.type === "select") {
+      html += `
+        <label>${name}</label>
+        <select class="input full-row" id="${key}">
+          <option value=""></option>
+          ${(config.options || []).map(o =>
+            `<option value="${o}">${o}</option>`
+          ).join("")}
+        </select>
+      `;
+    } else {
+      html += `
+        <label>${name}</label>
+        <input type="text"
+               class="input full-row"
+               id="${key}">
+      `;
+    }
+  });
+
+  // 🔹 paragraphs
+  const paraKey = fields === arguments[0] ? "para" : "para2";
+  (section[paraKey] || []).forEach(p => {
+    html += `
+      <div class="full-row bio-para">${p}</div>
+    `;
+  });
+}
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -44,11 +88,23 @@ document.addEventListener("DOMContentLoaded", () => {
   // CBC float fields → numbers + single dot
 window.onlyIntWithComma = function (input) {
   let value = input.value.replace(/[^0-9]/g, "");
-  if (value.length > 3) {
-    value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+  if (value.length <= 3) {
+    input.value = value;
+    return;
   }
-  input.value = value;
+
+  const lastThree = value.slice(-3);
+  const otherNumbers = value.slice(0, -3);
+
+  const formatted =
+    otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") +
+    "," +
+    lastThree;
+
+  input.value = formatted;
 };
+
 window.onlyFloatDot = function (input) {
   let value = input.value;
 
@@ -202,10 +258,14 @@ else if  (isSugarTest(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
-  test.fields.forEach(f => {
-    const name = f.name;
-    const sub = f.sub || "";
-   const key = makeKey(testKey, f.name);
+ test.fields.forEach(f => {
+
+  // ❌ skip sub-only rows in FORM
+  if (!f.name) return;
+
+  const name = f.name;
+  const sub = f.sub || "";
+  const key = makeKey(testKey, f.name);
 
 
     // ✅ PARALLEL URINE SUGAR → SELECT
@@ -213,12 +273,14 @@ if (f.type === "select") {
   html += `
     <label>${name}</label>
     <select class="input full-row" id="${key}">
-      ${f.options.map((opt, i) =>
-        `<option value="${opt}" ${i === 0 ? "selected" : ""}>${opt}</option>`
+      <option value="">Select</option>
+      ${f.options.map(opt =>
+        `<option value="${opt}">${opt}</option>`
       ).join("")}
     </select>
   `;
 }
+
 
     // ✅ BLOOD SUGAR INPUT
     else {
@@ -297,8 +359,9 @@ else if (isKFT(test)) {
 }
 
    
-   // ====================== SEROLOGY : ALL TEST (FORM) ======================
-// ====================== SEROLOGY : MULTI CHECKBOX FORM ======================
+   // ====================== SEROLOGY : ALL TEST (FORM) ===============
+   // ====================== SEROLOGY : MULTI CHECKBOX FORM =========
+
 else if (isSEROLOGY(test)) {
 
   html += `
@@ -324,39 +387,100 @@ else if (isSEROLOGY(test)) {
 
   html += `<div class="">`;
 
-  // 🔹 hidden forms
-  test.sections.forEach((section, index) => {
+// 🔹 hidden forms
+test.sections.forEach((section, index) => {
+  html += `
+    <div class="serology-section"
+         data-test="${testKey}"
+         data-index="${index}"
+         style="display:none">
+
+      <div class="full-row sub-heading">${section.name}</div>
+  `;
+
+  (section.fields || []).forEach(f => {
+    const name   = f.name || f[0];
+    const config = f.type ? f : (f[1] || {});
+
+    // 🔹 Skip fixed fields PARATYPHI A/B
+    const skipFixed = section.name.toUpperCase().includes("WIDAL") &&
+                      (name.toUpperCase().includes("PARATYPHI       A") ||
+                       name.toUpperCase().includes("PARATYPHI       B"));
+    if (skipFixed) return;
+
+    const key = makeKey(testKey, name);
+
+    if (config.type === "select") {
+      html += `
+        <label>${name}</label>
+        <select class="input full-row" id="${key}">
+          <option value=""></option>
+          ${(config.options || []).map(o => `<option value="${o}">${o}</option>`).join("")}
+        </select>
+      `;
+    } else {
+      html += `
+        <label>${name}</label>
+        <input type="text" class="input full-row" id="${key}">
+      `;
+    }
+  });
+
+  // 🔹 Add WIDAL RESULT input
+  (section.result || []).forEach(r => {
+    if (!r) return;
+    const name  = r.name || "Result";
+    const key   = makeKey(testKey, name);
+    const value = r.default || "";
 
     html += `
-      <div class="serology-section"
-           data-test="${testKey}"
-           data-index="${index}"
-           style="display:none">
-
-        <div class="full-row sub-heading">${section.name}</div>
+      <label>${name}</label>
+      <input type="text" class="input full-row" id="${key}" value="${value}">
     `;
+  });
 
-    section.fields.forEach(([name, config]) => {
 
-      const key = makeKey(testKey, name);
 
-      if (config.type === "select") {
-        html += `
-          <label>${name}</label>
-          <select class="input full-row" id="${key}">
-            <option value=""></option>
-            ${config.options.map(o => `<option value="${o}">${o}</option>`).join("")}
-          </select>
-        `;
-      } else {
-        html += `
-          <label>${name}</label>
-          <input type="text"
-                 class="input full-row"
-                 id="${key}">
-        `;
-      }
-    });
+
+/* ===== DENGUE IgG / IgM SECOND BLOCK ===== */
+if (section.fields2 && section.fields2.length) {
+
+  // subtitle
+  (section.sub2 || []).forEach(s => {
+    html += `
+      <div class="full-row bio-subtitle">${s}</div>
+    `;
+  });
+
+  section.fields2.forEach(f => {
+
+    const name   = f.name || f[0];
+    const config = f.type ? f : (f[1] || {});
+    const key = makeKey(testKey, name);
+
+    if (config.type === "select") {
+      html += `
+        <label>${name}</label>
+        <select class="input full-row" id="${key}">
+          <option value=""></option>
+          ${(config.options || []).map(o =>
+            `<option value="${o}">${o}</option>`
+          ).join("")}
+        </select>
+      `;
+    } else {
+      html += `
+        <label>${name}</label>
+        <input
+          type="text"
+          class="input full-row"
+          id="${key}">
+      `;
+    }
+  });
+}
+
+
 
     html += `</div>`;
   });
@@ -560,6 +684,29 @@ document.querySelectorAll("input").forEach(inp => {
     data[inp.id] = inp.value;
   }
 });
+
+// 🔥 WIDAL FIXED VALUES (AUTO)
+// Object.keys(Tests).forEach(testKey => {
+//   const test = Tests[testKey];
+//   if (!test?.sections) return;
+
+//   test.sections.forEach(section => {
+//     if (!section.name.toUpperCase().includes("WIDAL")) return;
+
+//     section.fields.forEach(f => {
+//       const name = f.name || f[0];
+
+//       if (
+//         name.toUpperCase().includes("PARATYPHI       A") ||
+//         name.toUpperCase().includes("PARATYPHI       B")
+//       ) {
+//         const key = makeKey(testKey, name);
+//         data[key] = "No Agglutination"; // ✅ permanent value
+//       }
+//     });
+//   });
+// });
+
 
 localStorage.setItem(
   "selectedSerology",
