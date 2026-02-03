@@ -9,6 +9,28 @@ window.kidneyHeaderPrinted = false;
 window.crpHeaderPrinted = false;
 
 
+function isPositiveSerology(value) {
+  if (!value) return false;
+
+  value = String(value).toUpperCase().trim();
+
+  // Direct positives
+  if (value === "POSITIVE") return true;
+
+  // WIDAL significance
+  if (
+    value.includes("AGGLUTINATION") &&
+    (
+      value.includes("1:120") ||
+      value.includes("1:160")
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 
 
 
@@ -48,9 +70,18 @@ function renderSerologyGroup() {
       if (!section) return;
 
       // 🔎 check any value
-      const hasValue = section.fields.some(([name]) =>
-        report[makeKey(testKey, name)]
-      );
+  const hasValue =
+  section.fields.some(([name]) =>
+    report[makeKey(testKey, name)]
+  ) ||
+  (
+    section.name.toUpperCase().includes("WIDAL") &&
+    section.fixedFields?.length
+  );
+
+
+if (!hasValue) return;
+
       if (!hasValue) return;
 
       if (!currentPage) newPage();
@@ -67,44 +98,214 @@ function renderSerologyGroup() {
           </tr>
           <tr class="test-head">
             <th>INVESTIGATION</th>
-          <th style="
-    width: 40%;
-">RESULT</th>
+            <th style="width:40%;">RESULT</th>
           </tr>
-          <tr class="bio-subtitle">
-            <th colspan="2">${section.name}</th>
-          </tr>
+         
       `;
+//  <tr class="bio-subtitle">
+//             <th colspan="2">${section.name}</th>
+//           </tr>
 
-      section.fields.forEach(([name]) => {
-        const value = report[makeKey(testKey, name)];
-        if (!value) return;
 
-        html += `
-          <tr class="test-row">
-            <td>${name}</td>
-            <td class="td-result">
-              <span class="result-value">${value}</span>
-            </td>
-          </tr>
-        `;
-      });
+/* ===================== 🔥 DENGUE SPECIAL ===================== */
+if (section.name.toUpperCase().includes("DENGUE")) {
 
-      section.sub?.forEach(s => {
-        html += `
-          <tr class="bio-sub-row">
-            <td colspan="2">${s}</td>
-          </tr>
-        `;
-      });
+  // ---- NS1 FIELD ----
+  const ns1Field = section.fields?.find(([name]) =>
+    name.toUpperCase().includes("NS1")
+  );
+  const ns1Value = ns1Field
+    ? report[makeKey(testKey, ns1Field[0])]
+    : null;
 
-      section.para?.forEach(p => {
-        html += `
-          <tr class="bio-para-row">
-            <td colspan="2">${p}</td>
-          </tr>
-        `;
-      });
+  // ---- IgG / IgM VALUES ----
+  const iggIgmValues = (section.fields2 || [])
+    .map(([name]) => ({
+      name,
+      value: report[makeKey(testKey, name)],
+      isAbnormal: isPositiveSerology(
+        report[makeKey(testKey, name)]
+      )
+    }))
+    .filter(f => f.value);
+
+  // ❌ skip section only if NOTHING entered
+  if (!ns1Value && iggIgmValues.length === 0) return;
+
+  /* ===== 1️⃣ NS1 RESULT ROW ===== */
+  if (ns1Value) {
+    html += `
+      <tr class="test-row">
+        <td class="mono-space">${ns1Field[0]}</td>
+        <td class="td-result">
+          <span class="result-value">${ns1Value}</span>
+        </td>
+      </tr>
+    `;
+  }
+
+  /* ===== 2️⃣ NS1 SUB LINES ===== */
+  section.sub?.forEach(s => {
+    html += `
+      <tr class="bio-sub-row">
+        <td colspan="2">${s}</td>
+      </tr>
+    `;
+  });
+
+  /* ===== 3️⃣ NS1 PARA (NOTE) ===== */
+  section.para?.forEach(p => {
+    p.split(/\n|<br\s*\/?>/i).forEach(line => {
+      if (!line.trim()) return;
+      html += `
+        <tr class="bio-para-row">
+          <td colspan="2">${line.trim()}</td>
+        </tr>
+      `;
+    });
+  });
+
+  /* ===== 4️⃣ IgG / IgM SUBTITLE ===== */
+  if (iggIgmValues.length) {
+    section.sub2?.forEach(s => {
+      html += `
+        <tr class="bio-subtitle">
+          <th colspan="2">${s}</th>
+        </tr>
+      `;
+    });
+  }
+
+  /* ===== 5️⃣ IgG / IgM RESULT ROWS ===== */
+  iggIgmValues.forEach(f => {
+    const style = f.isAbnormal
+      ? "font-weight:bold"
+      : "";
+    html += `
+      <tr class="test-row">
+        <td class="mono-space">${f.name}</td>
+        <td class="td-result">
+          <span class="result-value" style="${style}">
+            ${f.value}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+
+  /* ===== 6️⃣ IgG / IgM PARA ===== */
+  section.para2?.forEach(p => {
+    p.split(/\n|<br\s*\/?>/i).forEach(line => {
+      if (!line.trim()) return;
+      html += `
+        <tr class="bio-para-row">
+          <td colspan="2">${line.trim()}</td>
+        </tr>
+      `;
+    });
+  });
+}
+
+
+     /* ===================== NORMAL SEROLOGY ===================== */
+/* ===================== NORMAL SEROLOGY ===================== */
+else {
+  section.fields.forEach(([name]) => {
+    const key = makeKey(testKey, name);
+    const value = report[key];
+    
+    // 🔹 skip empty results
+    if (!value) return;
+
+    // 🔹 check if positive / abnormal
+    const isAbnormal = isPositiveSerology(value);
+  const cls = isAbnormal ? "serology-positive" : "";
+
+
+    html += `
+      <tr class="test-row">
+        <td class="mono-space">${name}</td>
+        <td class="td-result">
+          <span class="result-value ${cls}">${value}</span>
+
+        </td>
+      </tr>
+    `;
+  });
+/* ================= FIXED FIELDS (e.g., WIDAL) ================= */
+section.fixedFields?.forEach(([name, fixedValue]) => {
+  if (!fixedValue) return;
+
+  const isAbnormal = isPositiveSerology(fixedValue);
+  const cls = isAbnormal ? "serology-positive" : "";
+
+  html += `
+    <tr class="test-row">
+      <td class="mono-space">${name}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">
+          ${fixedValue}
+        </span>
+      </td>
+    </tr>
+  `;
+});
+/* ===================== USER-ENTERED WIDAL RESULTS ===================== */
+(section.result || []).forEach(r => {
+  if (!r) return;
+
+  const name = r.name || "Result";
+  const key  = makeKey(testKey, name);
+  const value = report[key];
+  if (!value) return; // agar empty hai to skip
+
+  const isAbnormal = isPositiveSerology(value);
+  const cls = isAbnormal ? "serology-positive" : "";
+
+  html += `
+    <tr class="test-row">
+      <td class="mono-space">${name}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">${value}</span>
+      </td>
+    </tr>
+  `;
+});
+
+  
+
+  section.sub?.forEach(s => {
+    html += `
+      <tr class="bio-sub-row">
+        <td colspan="2">${s}</td>
+      </tr>
+    `;
+  });
+
+  section.para?.forEach(p => {
+    p.split(/\n|<br\s*\/?>/i).forEach(line => {
+      if (!line.trim()) return;
+      html += `
+        <tr class="bio-para-row">
+          <td colspan="2">${line.trim()}</td>
+        </tr>
+      `;
+    });
+  });
+
+  section.para2?.forEach(p => {
+    p.split(/\n|<br\s*\/?>/i).forEach(line => {
+      if (!line.trim()) return;
+      html += `
+        <tr class="bio-para-row">
+          <td colspan="2">${line.trim()}</td>
+        </tr>
+      `;
+    });
+  });
+}
+
+
 
       html += `</table>`;
       block.innerHTML = html;
@@ -115,15 +316,13 @@ function renderSerologyGroup() {
       if (isTestOverflow()) {
         currentTestsBox.removeChild(block);
         newPage();
-
-        // ✅ repeat header
         window.serologyHeaderPrinted = false;
-
         currentTestsBox.appendChild(block);
       }
     });
   });
 }
+
 
 
 import Tests from "../tests/index.js";
@@ -296,7 +495,8 @@ function renderTest(testKey) {
         html += `<tr class="dlc-heading"><td colspan="4">DIFF. LEUCOCYTE COUNT</td></tr>`;
       }
 
-      const fieldKey = `${testKey}_${f[0].replace(/\s+/g, "_")}`;
+     const fieldKey = makeKey(testKey, f[0]);
+
       const result = report[fieldKey] || "";
 
      let flagHTML = "";
@@ -332,57 +532,81 @@ if (result && f[2]) {
   }
 
 /* ================= BIOCHEMISTRY / SUGAR ================= */
-else if (
-  test.title === "BIOCHEMISTRY REPORT" &&
-  test.subtitle &&
-  !test.class   // ❌ LFT ko exclude
-) {
+else if (test.title === "BIOCHEMISTRY REPORT" && test.subtitle && !test.class) {
+
+  // 🔎 at least one value entered
+  const hasAnyValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.name);
+    return report[k] && report[k] !== "";
+  });
+  if (!hasAnyValue) return "";
 
   html += `
-    <tr class="test-title"><th colspan="4">${test.title}</th></tr>
+    <tr class="test-title"><th colspan="4">${test.subtitle}</th></tr>
     <tr class="test-head">
-      <th>INVESTIGATION</th><th>RESULT</th><th>UNIT</th><th>REFERENCE RANGE</th>
-    </tr>
-    <tr class="bio-subtitle">
-      <th colspan="4">${test.subtitle}</th>
+      <th>INVESTIGATION</th>
+      <th>RESULT</th>
+      <th>UNIT</th>
+      <th>REFERENCE RANGE</th>
     </tr>
   `;
 
   test.fields.forEach(f => {
     const fieldKey = makeKey(testKey, f.name);
-    const result = report[fieldKey] || "";
+    const result = report[fieldKey];
+
+    // 🔹 skip if empty AND no sub
+    if (!result && !f.sub) return;
+
+    // ✅ Sub-label first (AFTER 1 & 1/2 HOURS)
+    if (f.sub) {
+      html += `
+        <tr class="sub-row">
+          <td colspan="4" class="sub-label">${f.sub}</td>
+        </tr>
+      `;
+    }
+
+    // 🔹 skip field if no value
+    if (!result) return;
+
     const isUrine = f.name.toUpperCase().includes("URINE");
 
-    let flagHTML = "";
     let rowClass = "";
+    let flagHTML = "";
 
-    // ✅ URINE SUGAR LOGIC
-    if (isUrine) {
-      if (result === "Absent") rowClass = "normal-value";
-      else if (result) rowClass = "abnormal-value";
-    }
-    // ✅ NORMAL BIOCHEM FLAG
-    else if (result && f.ref) {
-      const { flag } = checkFlag(result, [f.ref], patient.gender);
-      if (flag) {
-        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
-        rowClass = "abnormal-value";
-      }
-    }
+   let resultClass = "";
 
-    html += `
-      <tr class="test-row">
-        <td>${f.name}</td>
-        <td class="td-result ${rowClass}">
-          <span class="result-value">${result}</span>
-          ${flagHTML}
-        </td>
-        <td class="td-unit">${f.unit}</td>
-        <td class="td-ref">${f.ref}</td>
-      </tr>
-    `;
+if (isUrine) {
+  const val = String(result).trim().toUpperCase();
+  resultClass = val === "ABSENT" ? "normal-value" : "abnormal-value";
+} 
+else if (f.ref) {
+  const { flag } = checkFlag(result, [f.ref], patient.gender);
+  if (flag) {
+    resultClass = "abnormal-value";
+    flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+  }
+}
+
+
+    // ✅ Main field row
+   html += `
+  <tr class="test-row">
+    <td>${f.name}</td>
+    <td class="td-result">
+      <span class="result-value ${resultClass}">${result}</span>
+      ${flagHTML}
+    </td>
+    <td class="td-unit">${f.unit || ""}</td>
+    <td class="td-ref">${f.ref || "Nil"}</td>
+  </tr>
+`;
+
   });
 }
+
+
 /* ================= LIVER FUNCTION TEST ================= */
 else if (test.class === "LIVER FUNCTION TEST") {
 
@@ -673,12 +897,17 @@ else if (test.class === "SEROLOGY TEST") {
     const section = test.sections[index];
     if (!section) return;
 
-    // check any value
-    const hasValue = section.fields.some(([name]) =>
-      report[makeKey(testKey, name)]
-    );
+    // 🔎 check any value entered
+   const hasValue =
+  section.fields.some(([name]) =>
+    report[makeKey(testKey, name)]
+  ) ||
+  section.fixedFields?.some(([_, v]) => v);
+
+
     if (!hasValue) return;
 
+    // 🔹 table header (once)
     if (!hasAnyData) {
       htmlParts.push(`
         <table>
@@ -693,26 +922,54 @@ else if (test.class === "SEROLOGY TEST") {
       hasAnyData = true;
     }
 
+    // 🔹 section title
     htmlParts.push(`
       <tr class="bio-subtitle">
         <th colspan="2">${section.name}</th>
       </tr>
     `);
 
-    section.fields.forEach(([name]) => {
-      const value = report[makeKey(testKey, name)];
-      if (!value) return;
+  /* ================= FIELDS ================= */
+section.fields.forEach(([name]) => {
+  const key = makeKey(testKey, name);
+  const value = report[key];
+  if (!value) return;
 
-      htmlParts.push(`
-        <tr class="test-row">
-          <td>${name}</td>
-          <td class="td-result">
-            <span class="result-value">${value}</span>
-          </td>
-        </tr>
-      `);
-    });
+  const isAbnormal = isPositiveSerology(value);
+  const cls = isAbnormal ? "serology-positive" : "";
 
+  htmlParts.push(`
+    <tr class="test-row">
+      <td class="mono-space">${name}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">
+          ${value}
+        </span>
+      </td>
+    </tr>
+  `);
+});
+
+/* ================= FIXED FIELDS ================= */
+section.fixedFields?.forEach(([name, fixedValue]) => {
+  // ✅ Highlight if positive
+  const isAbnormal = isPositiveSerology(fixedValue);
+  const cls = isAbnormal ? "serology-positive" : "";
+
+  htmlParts.push(`
+    <tr class="test-row">
+      <td class="mono-space">${name}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">
+          ${fixedValue}
+        </span>
+      </td>
+    </tr>
+  `);
+});
+
+
+    /* ================= SUB / PARA ================= */
     section.sub?.forEach(s => {
       htmlParts.push(`
         <tr class="bio-sub-row">
@@ -722,12 +979,16 @@ else if (test.class === "SEROLOGY TEST") {
     });
 
     section.para?.forEach(p => {
-      htmlParts.push(`
-        <tr class="bio-para-row">
-          <td colspan="2">${p}</td>
-        </tr>
-      `);
+      p.split(/\n|<br\s*\/?>/i).forEach(line => {
+        if (!line.trim()) return;
+        htmlParts.push(`
+          <tr class="bio-para-row">
+            <td colspan="2">${line.trim()}</td>
+          </tr>
+        `);
+      });
     });
+
   });
 
   if (!hasAnyData) return "";
@@ -739,50 +1000,81 @@ else if (test.class === "SEROLOGY TEST") {
 
 
 
+
 /* ================= URINE PROFILE ================= */
-else if (test.class === "URINE PROFILE") {
+else if (test.title?.toUpperCase().includes("URINE")) {
+
+
+  // 🔎 check if ANY urine value exists
+  const hasAnyValue = test.sections.some(section =>
+    section.fields.some(f => {
+      const key = makeKey(testKey, f[0]);
+      return report[key];
+    })
+  );
+
+  if (!hasAnyValue) return ""; // ❌ completely skip if nothing entered
 
   html += `<table class="urine-table">
-    <tr class="test-title"><th colspan="2">${test.title}</th></tr>
+    <tr class="test-title">
+      <th colspan="2">${test.title}</th>
+    </tr>
     <tr class="test-head">
       <th>INVESTIGATION</th>
-      <th >RESULT</th>
+      <th>RESULT</th>
     </tr>
   `;
 
   test.sections.forEach(section => {
-    html += `<tr><th colspan="2">${section.name}</th></tr>`;
 
-    section.fields.forEach(f => {
-      const fieldKey =
-        makeKey(testKey, f[0])
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="2">${section.name}</th>
+      </tr>
+    `;
+section.fields.forEach(f => {
+  const fieldName = f[0];
+  const config = f[1] || {};
+  const fieldKey = makeKey(testKey, fieldName);
+  const value = report[fieldKey];
+
+  if (!value) return;
+
+  let cls = "";
+
+  // 🟢 TEXT → always normal
+  if (config.type === "text") {
+    cls = "normal-value";
+  }
+
+  // 🟢 SELECT → first option normal, rest abnormal
+  else if (
+    config.type === "select" &&
+    Array.isArray(config.options) &&
+    config.options.length
+  ) {
+    cls =
+      value === config.options[0]
+        ? "normal-value"
+        : "abnormal-value";
+  }
+
+  html += `
+    <tr class="test-row">
+      <td>${fieldName}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">${value}</span>
+      </td>
+    </tr>
+  `;
+});
 
 
-      const value = report[fieldKey] || "";
-      const options = f[1]?.options || [];
-
-      let cls = "";
-      const alwaysNormalFields = ["QUANTITY","NATURE","REACTION"];
-
-      if (alwaysNormalFields.includes(f[0].toUpperCase())) {
-        cls = "normal-value";
-      } else {
-        cls = getSelectClass(value, options);
-      }
-
-      if (!value) return; // 🔥 empty fields skip
-
-      html += `
-        <tr>
-          <td>${f[0]}</td>
-          <td class="${cls}">${value}</td>
-        </tr>
-      `;
-    });
   });
 
   html += `</table>`;
 }
+
 
 
   html += `</tbody></table>`;
