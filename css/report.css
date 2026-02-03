@@ -449,7 +449,10 @@ table {
   font-weight: bold;
   margin-left: 6px;
 }
-
+.flag {
+  color: red !important;
+  font-weight: 700;
+}
 .flag:contains("H"),
 .flag:contains("L") {
   color: red;
@@ -529,3 +532,34 @@ table {
 .category-block:last-child {
   margin-bottom: 8mm;
 }
+.mono-space {
+  white-space: pre;        /* 🔥 MOST IMPORTANT */
+  /* font-family: "Courier New", monospace; */
+}
+
+.result-value {
+  font-weight: normal;
+  color: black;
+}
+.serology-positive {
+  /* color: #c00000 !important; */
+  font-weight: 750 !important;
+}
+
+.normal-value {
+  color: #000;
+  font-weight: 400;
+}
+
+.abnormal-value {
+  color: red;
+  font-weight: bold;
+}
+
+.td-result.abnormal-value span.result-value {
+  color: red !important;
+  font-weight: bold !important;
+}
+
+
+
