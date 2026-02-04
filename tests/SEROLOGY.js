@@ -68,8 +68,8 @@ export default {
         type: "select",
         options: ["Negative", "Positive"],
         after: [
-          "Mahesh Raped maneschepmatography",
-          "Thesiscovering tost, Kasdly confion by ELSISA METHOD"
+          "Method:- Rapid Immunochromatography",
+          "This is screening test. Kindly confirm by ELSISA METHOD"
         ]
       }
     ],
