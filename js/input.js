@@ -179,6 +179,10 @@ const isCRP = test =>
 const isSEROLOGY = test =>
   String(test.class || "").toUpperCase() === "SEROLOGY TEST";
 
+  //HEMATOLOGYESR
+const isESR = test =>
+  String(test.key || "").toUpperCase() === "ESR";
+
 
 
   // CBC test detection
@@ -320,6 +324,38 @@ else if (isLFT(test)) {
   inputmode="decimal"
 />
 
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== HEMATOLOGY : ESR TEST ======================
+else if (isESR(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
     `;
   });
 
@@ -581,6 +617,38 @@ const fieldKey = makeKey(testKey, f[0]);
   value="${f[1]?.default || ""}">
       `;
     }
+
+    // ====================== PS FOR MP (HEMATOLOGY) ======================
+if (
+  test.title?.toUpperCase().includes("HEMATOLOGY") &&
+  (
+    fieldName.toUpperCase().includes("PS FOR MP") ||
+    fieldName.toUpperCase().includes("BLOOD GROUP")
+  ) &&
+  f[1]?.type === "select"
+) {
+  return `
+    <label>${fieldName}</label>
+    <select
+      class="input full-row"
+      id="${key}"
+      onchange="toggleOther(this)"
+    >
+      ${f[1].options.map(opt =>
+        `<option value="${opt}">${opt}</option>`
+      ).join("")}
+    </select>
+
+    <input
+      type="text"
+      class="input full-row"
+      id="${key}_other"
+      placeholder="Specify PS For MP"
+      style="display:none"
+    >
+  `;
+}
+
 
     // ====================== DEFAULT TEST FIELDS ======================
     return `
