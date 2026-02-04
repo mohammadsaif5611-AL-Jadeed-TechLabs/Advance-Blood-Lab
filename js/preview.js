@@ -7,6 +7,8 @@ window.liverHeaderPrinted = false;
 window.serologyHeaderPrinted = false;
 window.kidneyHeaderPrinted = false;
 window.crpHeaderPrinted = false;
+window.esrHeaderPrinted = false;
+
 
 
 function isPositiveSerology(value) {
@@ -779,6 +781,71 @@ else if (test.class === "KIDNEY FUNCTION TEST") {
     `;
   });
 }
+/* ================= HEMATOLOGY : ESR ================= */
+else if (test.class === "HEMATOLOGYESR") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key || f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  if (!window.esrHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">${test.title}</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+     
+    `;
+    window.esrHeaderPrinted = true;
+  }
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key || f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+     const gender =
+  String(patient.gender).toUpperCase().startsWith("M")
+    ? "M"
+    : "F";
+
+const genderRef = gender === "M" ? f.ref.M : f.ref.F;
+
+
+      const { flag } = checkFlag(result, [genderRef], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td>${f.unit}</td>
+        <td>M: ${f.ref.M} | F: ${f.ref.F}</td>
+      </tr>
+    `;
+  });
+}
+
 
 /* ================= SEROLOGY : CRP & RA TEST ================= */
 else if (test.class === "CRP SEROLOGY TEST") {
@@ -1128,6 +1195,135 @@ section.fields.forEach(f => {
 
   html += `</table>`;
 }
+
+/* ================= HEMATOLOGY : PS FOR MP ================= */
+else if (
+  test.class === "HEMATOLOGY" &&
+  (
+    test.testname === "PS FOR MP"
+  )
+) {
+
+  let hasValue = false;
+  let htmlParts = [];
+
+  test.sections.forEach(section => {
+    section.fields.forEach(([name, config]) => {
+      const key = makeKey(testKey, name);
+      if (report[key]) hasValue = true;
+    });
+  });
+
+  if (!hasValue) return "";
+
+  htmlParts.push(`
+    <table>
+      <tr class="test-title">
+        <th colspan="2">${test.title}</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+       <th style="
+    width: 40%;
+">RESULT</th>
+      </tr>
+  `);
+
+  test.sections.forEach(section => {
+
+    // htmlParts.push(`
+    //   <tr class="bio-subtitle">
+    //     <th colspan="2">${section.name}</th>
+    //   </tr>
+    // `);
+
+    section.fields.forEach(([name, config]) => {
+      const key = makeKey(testKey, name);
+      const value = report[key];
+      if (!value) return;
+
+      // ✅ NORMAL / ABNORMAL LOGIC
+      const isNormal = value === config.options[0];
+      const cls = isNormal ? "normal-value" : "bldgr";
+
+      htmlParts.push(`
+        <tr class="test-row">
+          <td class="mono-space">${name}</td>
+          <td class="td-result">
+            <span class="result-value ${cls}">
+              ${value}
+            </span>
+          </td>
+        </tr>
+      `);
+    });
+  });
+
+  htmlParts.push(`</table>`);
+  html += htmlParts.join("");
+}
+else if (
+  test.class === "HEMATOLOGY" &&
+  test.testname === "BLOOD GROUP"
+) {
+
+  let hasValue = false;
+  let htmlParts = [];
+
+  test.sections.forEach(section => {
+    section.fields.forEach(([name]) => {
+      const key = makeKey(testKey, name);
+      if (report[key]) hasValue = true;
+    });
+  });
+
+  if (!hasValue) return "";
+
+  htmlParts.push(`
+    <table>
+      <tr class="test-title">
+        <th colspan="2">${test.title}</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th style="width:40%">RESULT</th>
+      </tr>
+  `);
+
+  test.sections.forEach(section => {
+    section.fields.forEach(([name]) => {
+
+      const key = makeKey(testKey, name);
+      let value = report[key];
+      if (!value) return;
+
+      // ✅ OTHER support
+      if (value === "OTHER") {
+        const otherVal = report[key + "_other"];
+        if (otherVal) value = otherVal;
+      }
+
+      htmlParts.push(`
+        <tr class="test-row">
+          <td class="mono-space">${name}</td>
+          <td class="td-result">
+            <span style="
+              color: #000;
+              font-weight: bold;
+              letter-spacing: 0.5px;
+            ">
+              ${value}
+            </span>
+          </td>
+        </tr>
+      `);
+    });
+  });
+
+  htmlParts.push(`</table>`);
+  html += htmlParts.join("");
+}
+
 
 
 
