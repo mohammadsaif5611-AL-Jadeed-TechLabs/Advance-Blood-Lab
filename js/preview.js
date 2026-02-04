@@ -87,6 +87,8 @@ if (!hasValue) return;
       if (!currentPage) newPage();
 
       // 🔹 section block (atomic)
+
+      
       const block = document.createElement("div");
       block.className = "test-block serology-block";
       block.style.pageBreakInside = "avoid";
@@ -102,6 +104,25 @@ if (!hasValue) return;
           </tr>
          
       `;
+
+      // 🔹 SECTION NAME (WIDAL / NORMAL)
+if (section.name) {
+  if (section.name.toUpperCase().includes("WIDAL")) {
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="2" style="text-align:left;">
+          ${section.name}
+        </th>
+      </tr>
+    `;
+  } else {
+    html += `
+      <tr class="bio-subtitle">
+      </tr>
+    `;
+  }
+}
+
 //  <tr class="bio-subtitle">
 //             <th colspan="2">${section.name}</th>
 //           </tr>
@@ -210,28 +231,42 @@ if (section.name.toUpperCase().includes("DENGUE")) {
      /* ===================== NORMAL SEROLOGY ===================== */
 /* ===================== NORMAL SEROLOGY ===================== */
 else {
-  section.fields.forEach(([name]) => {
-    const key = makeKey(testKey, name);
-    const value = report[key];
-    
-    // 🔹 skip empty results
-    if (!value) return;
+section.fields.forEach(field => {
 
-    // 🔹 check if positive / abnormal
-    const isAbnormal = isPositiveSerology(value);
+  const name = field.name || field[0];
+  const key  = makeKey(testKey, name);
+  const value = report[key];
+  if (!value) return;
+
+  const isAbnormal = isPositiveSerology(value);
   const cls = isAbnormal ? "serology-positive" : "";
 
+  // 🧪 MAIN RESULT ROW
+  html += `
+    <tr class="test-row">
+      <td class="mono-space">${name}</td>
+      <td class="td-result">
+        <span class="result-value ${cls}">
+          ${value}
+        </span>
+      </td>
+    </tr>
+  `;
 
-    html += `
-      <tr class="test-row">
-        <td class="mono-space">${name}</td>
-        <td class="td-result">
-          <span class="result-value ${cls}">${value}</span>
+ // 🧾 FIELD-LEVEL AFTER TEXT (HBsAg / HCV METHOD)
+const config = field[1] || {};
 
-        </td>
-      </tr>
-    `;
-  });
+config.after?.forEach(line => {
+  html += `
+    <tr class="bio-sub-row">
+      <td colspan="2">${line}</td>
+    </tr>
+  `;
+});
+
+
+});
+
 /* ================= FIXED FIELDS (e.g., WIDAL) ================= */
 section.fixedFields?.forEach(([name, fixedValue]) => {
   if (!fixedValue) return;
@@ -332,25 +367,33 @@ function checkFlag(result, refList, gender) {
     return { flag: "" };
   }
 
-  const value = parseFloat(
-    String(result).replace(/,/g, "")
-  );
+  const value = parseFloat(String(result).replace(/,/g, ""));
   if (isNaN(value)) return { flag: "" };
 
   const ref = refList[0];
-  const match = ref.match(
-    /(\d+[,.\d]*)\s*-\s*(\d+[,.\d]*)/
-  );
-  if (!match) return { flag: "" };
 
-  const min = parseFloat(match[1].replace(/,/g, ""));
-  const max = parseFloat(match[2].replace(/,/g, ""));
+  /* ================= RANGE: 0 - 30 ================= */
+  let match = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
+  if (match) {
+    const min = parseFloat(match[1]);
+    const max = parseFloat(match[2]);
 
-  if (value < min) return { flag: "L" };
-  if (value > max) return { flag: "H" };
+    if (value < min) return { flag: "L" };
+    if (value > max) return { flag: "H" };
+    return { flag: "" };
+  }
+
+  /* ================= RANGE: Upto 30 ================= */
+  match = ref.match(/upto\s*([\d.]+)/i);
+  if (match) {
+    const max = parseFloat(match[1]);
+    if (value > max) return { flag: "H" };
+    return { flag: "" };
+  }
 
   return { flag: "" };
 }
+
 
 
 
@@ -921,13 +964,24 @@ else if (test.class === "SEROLOGY TEST") {
       `);
       hasAnyData = true;
     }
+// 🔹 WIDAL special heading
+if (section.name.toUpperCase().includes("WIDAL")) {
+  htmlParts.push(`
+    <tr class="bio-subtitle">
+      <th colspan="2" style="text-align:left;">
+        ${section.name}
+      </th>
+    </tr>
+  `);
+} else {
+  htmlParts.push(`
+    <tr class="bio-subtitle">
+      <th colspan="2">${section.name}</th>
+    </tr>
+  `);
+}
 
-    // 🔹 section title
-    htmlParts.push(`
-      <tr class="bio-subtitle">
-        <th colspan="2">${section.name}</th>
-      </tr>
-    `);
+  
 
   /* ================= FIELDS ================= */
 section.fields.forEach(([name]) => {
