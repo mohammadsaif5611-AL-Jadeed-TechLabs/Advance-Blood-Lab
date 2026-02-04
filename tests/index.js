@@ -11,6 +11,12 @@ import KIDNEY_FUNCTION from "./KIDNEY_FUNCTION.js";
 import CRP from "./CRP_SEROLOGY.js";
 import SEROLOGY from "./SEROLOGY.js";
 
+// HEMATOLOGY=====
+import MP from "./PS_FOR_MP.js";
+import BNLD_GRP from "./BLOOD_GR.js";
+import ESR from "./ESR.js";
+
+
 export default {
   CBC,
   URINE,
@@ -20,4 +26,8 @@ export default {
   KIDNEY_FUNCTION,
   CRP,
   SEROLOGY,
+
+  MP,
+  BNLD_GRP,
+  ESR,
 };
