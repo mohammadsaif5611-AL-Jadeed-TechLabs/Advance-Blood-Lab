@@ -372,7 +372,8 @@ function checkFlag(result, refList, gender) {
   const value = parseFloat(String(result).replace(/,/g, ""));
   if (isNaN(value)) return { flag: "" };
 
-  const ref = refList[0];
+  const ref = refList[0].replace(/,/g, "");
+
 
   /* ================= RANGE: 0 - 30 ================= */
   let match = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
