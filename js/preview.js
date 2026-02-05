@@ -153,7 +153,7 @@ if (
 if (isCombined && section.name.toUpperCase().includes("HIV")) {
   combinedHTML += `
     <tr class="bio-subtitle">
-      <th colspan="2" style="text-align:left; padding-left:6px;">
+      <th colspan="2" style="text-align:left; padding-left:6px;font-weight:700;">
         REPORT ON HIV
       </th>
     </tr>
