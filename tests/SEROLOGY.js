@@ -37,7 +37,7 @@ export default {
     ["S PARATYPHI       A (H)", "No Agglutination"],
     ["S PARATYPHI       B (H)", "No Agglutination"]
   ],
- result:[, { type: "text", default: "Negative" }],
+ result:[, { type: "text", default: "NEGATIVE" }],
   para: [
     "Note : Agglutinin titre greater than 1:80 is considered significant & is usually suggestive of infection, whereas low titres are often found in normal individuals."
   ]
@@ -51,34 +51,41 @@ export default {
       fields: [
         ["VDRL / TPHA TEST", {
           type: "select",
-          options: ["Negative", "Positive"]
+          options: ["NEGATIVE", "POSITIVE"]
         }]
       ]
     },
 
-    /* ================= HBsAg + HCV ================= */
-/* ================= HBsAg + HCV ================= */
+
+/* ================= HBsAg ================= */
 {
-  name: "AUSTRALIA ANTIGEN & HCV",
+  name: "AUSTRALIA ANTIGEN",
 
   fields: [
     [
       "AUSTRALIA ANTIGEN TEST (S.HBsAg)",
       {
         type: "select",
-        options: ["Negative", "Positive"],
+        options: ["NEGATIVE", "POSITIVE"],
         after: [
           "Method:- Rapid Immunochromatography",
           "This is screening test. Kindly confirm by ELSISA METHOD"
         ]
       }
-    ],
+    ]
+  ]
+},
 
+/* ================= HCV ================= */
+{
+  name: "HCV",
+
+  fields: [
     [
       "ANTI HCV ANTIBODIES",
       {
         type: "select",
-        options: ["Negative", "Positive"],
+        options: ["NEGATIVE", "POSITIVE"],
         after: [
           "Method:- Rapid Immunochromatography Test"
         ]
@@ -95,14 +102,14 @@ export default {
       fields: [
         ["Blood for Antibodies HIV (I & II)", {
           type: "select",
-          options: ["Negative", "Positive"]
+          options: ["NEGATIVE", "POSITIVE"]
         }]
       ],
       sub: [
         "Test done by Rapid Screening Card Method"
       ],
       para: [
-        "Note: The above test is screening test detection of HIV I and II antibodies In human serum or plasma immobilized on an immunofiltration Membrane. HIV Land HIV II viruses share many morphological and biological characteristics. It is likely that due to the reason their antibodiesRecombinant proteins. Appearance of dots of HIV I and HIV II antibodies On the test device does not necessanly imply co-infection from HIV I and II. This is only a Screening test. All positive detected sample shall be Reconfirmed by using WESTERN BLOT techniques. Negative test result does not exclude the possibility of infection or exposure to HIV"
+        "Note: The above test is screening test detection of HIV I and II antibodies In human serum or plasma immobilized on an immunofiltration Membrane. HIV I and HIV II viruses share many morphological and biological characteristics. It is likely that due to the reason their antibodiesRecombinant proteins. Appearance of dots of HIV I and HIV II antibodies On the test device does not necessanly imply co-infection from HIV I and II. This is only a Screening test. All positive detected sample shall be Reconfirmed by using WESTERN BLOT techniques. Negative test result does not exclude the possibility of infection or exposure to HIV"
       ]
     },
 
@@ -112,14 +119,14 @@ export default {
 
   fields: [
     // ===== MAIN NS1 RESULT =====
-    ["DENGUE NS1 Antigen", {
+    ["NS1 Antigen", {
       type: "select",
       options: ["NEGATIVE", "POSITIVE"]
     }]
   ],
 
   sub: [
-    "NS1 Antigen",
+    
     "Test done by J. Mitra Dengue Day 1 Rapid Screening Card Method, DONE BY AVANTOR Benesphera Card Test"
   ],
 
@@ -148,7 +155,8 @@ export default {
   ],
 
 para2: [
-  "Note - Serological data must always be interpreted with the clinical findings. Dengue viruses are mosquito-borne viruses. Infections may lead to Dengue fever or dengue haemorrhagic fever and dengue shock syndrome. IgM antibodies appear around the 5th day of a Dengue infection, rise for 1–3 weeks and last for 60–90 days. IgG antibodies appear by the 14th day in primary infections and on the 2nd day in secondary infections and can usually be detected for life. Both Dengue fever IgM & IgG are useful in the early detection of primary and secondary Dengue infections."
+  "Note - Serological data must always be interpreted with the clinicaal findings.",
+"Note :- Dengue viruses are mosquito-borne viruses. Infections may lead to Dengue fever or denguenhaemorrhagic fever and dengue shock syndrome. In the extreme cases, IgM antibodies appear around the 5th day of a Dengue infection, rise for 1-3 weeks and last for 60-90 days.IgG antibodies appear by the 14th day in primary infections and on the 2nd day in secondaryinfections and can usually be detected for life.Both ZDengue fever IgM & IgG are useful in the early detection of primary and secondary Dengue infections."
 ]
 
 }
