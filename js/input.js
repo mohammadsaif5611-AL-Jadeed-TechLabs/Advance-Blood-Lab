@@ -406,32 +406,37 @@ else if (isSEROLOGY(test)) {
   `;
 
   // 🔹 checkbox list
-  test.sections.forEach((section, index) => {
-    html += `
-      <label class="full-row">
+ test.sections.forEach((section, index) => {
+  html += `
+    <label class="full-row sero-checkbox">
+      <input type="checkbox"
+             class="sero-check"
+             data-test="${testKey}"
+             data-index="${index}">
+      ${section.name}
+    </label>
 
-      
+    <div class="full-row sero-divider"></div>
+  `;
+});
 
-        <input type="checkbox"
-               class="sero-check"
-               data-test="${testKey}"
-               data-index="${index}">
-        ${section.name}
-      </label>
-    `;
-  });
 
   html += `<div class="">`;
 
 // 🔹 hidden forms
 test.sections.forEach((section, index) => {
   html += `
-    <div class="serology-section"
-         data-test="${testKey}"
-         data-index="${index}"
-         style="display:none">
+   <div class="serology-section"
+     data-test="${testKey}"
+     data-index="${index}"
+     style="display:none">
 
-      <div class="full-row sub-heading">${section.name}</div>
+  <div class="full-row sub-heading sero-title">
+    ${section.name}
+  </div>
+
+  <div class="full-row sero-line"></div>
+
   `;
 
   (section.fields || []).forEach(f => {
