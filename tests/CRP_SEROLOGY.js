@@ -9,7 +9,7 @@ export default {
   fields: [
     // ✅ CRP
     {
-      name: "'C' Reactive Proteins ( CRP )",
+      name: "'C' Reactive Proteins (CRP)",
       unit: "mg/dl",
       // ref: "0 - 6"
       ref: "Upto 6.0"
@@ -29,7 +29,7 @@ export default {
 
     // ✅ RA
     {
-      name: "S Rheumatoid Factor (RA)",
+      name: "S Rheumatoid Factor (RA)(Quantitative)",
       unit: "IU/ml",
       // ref: "0 - 30"
       
