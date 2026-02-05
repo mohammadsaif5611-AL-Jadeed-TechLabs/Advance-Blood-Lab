@@ -167,6 +167,10 @@ const isSugarTest = test =>
 const isLFT = test =>
   String(test.class || "").toUpperCase() === "LIVER FUNCTION TEST";
 
+  // BIOCHEM---LIVERFUNCTION
+const isLPT = test =>
+  String(test.class || "").toUpperCase() === "LIPID REPORT";
+
   // BIOCHEM---KIDNEYFUNCTION
 const isKFT = test =>
   String(test.class || "").toUpperCase() === "KIDNEY FUNCTION TEST";
@@ -309,6 +313,28 @@ if (f.type === "select") {
 
 // ====================== BIOCHEMISTRY : LIVER FUNCTION TEST ======================
 else if (isLFT(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+     <input
+  type="text"
+  class="input full-row lft-input"
+  id="${key}"
+  inputmode="decimal"
+/>
+
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== BIOCHEMISTRY : LIPID PROFILE TEST ======================
+else if (isLPT(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
