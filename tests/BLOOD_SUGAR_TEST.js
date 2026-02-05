@@ -18,7 +18,7 @@ export default {
 
     // PARALLEL URINE SUGAR (FASTING)
     {
-      name: "PARALLEL URINE SUGAR (FASTING)",
+      name: "PARALLEL URINE SUGAR.",
       unit: "",
       ref: "Nil",
       type: "select",
@@ -26,14 +26,15 @@ export default {
     },
 
     // BLOOD SUGAR POSTMEAL WITH SUB-LABEL
-    {
-      sub: "(AFTER 1 & 1/2 HOURS)"  // 🟢 Sub label for next row
-    },
+   
     {
       name: "BLOOD SUGAR POSTMEAL",
       unit: "mg/dl",
       ref: "70 - 160",
       type: "decimal"
+    },
+     {
+      sub: "(AFTER 1 & 1/2 HOURS)"  // 🟢 Sub label for next row
     },
 
     // PARALLEL URINE SUGAR (POSTMEAL)
