@@ -18,7 +18,10 @@ function isCombinedSerology(sectionName = "") {
 }
 
 
+
+
 window.liverHeaderPrinted = false;
+window.lipidHeaderPrinted = false;
 window.serologyHeaderPrinted = false;
 window.kidneyHeaderPrinted = false;
 window.crpHeaderPrinted = false;
@@ -523,10 +526,56 @@ function checkFlag(result, refList, gender) {
   const value = parseFloat(String(result).replace(/,/g, ""));
   if (isNaN(value)) return { flag: "" };
 
-  const ref = refList[0].replace(/,/g, "");
+  /* 🔥 ref ko jaisa aaye waisa hi combine */
+  let ref = refList.join(" | ").trim();
 
+  /* ===================================================
+     🔥 STEP 1: NORMALIZE GENDER
+  =================================================== */
+  const genderNorm = String(gender || "").toLowerCase().trim();
+  const isMale = genderNorm === "male" || genderNorm === "m";
+  const isFemale = genderNorm === "female" || genderNorm === "f";
 
-  /* ================= RANGE: 0 - 30 ================= */
+  /* ===================================================
+     🔥 STEP 2A: CBC STYLE →  F : ... | M : ...
+  =================================================== */
+  if ((isMale || isFemale) && /[MF]\s*:/i.test(ref)) {
+    const parts = ref.split("|").map(p => p.trim());
+
+    for (const p of parts) {
+      if (isMale && /^M\s*:/i.test(p)) {
+        ref = p.replace(/^M\s*:\s*/i, "");
+        break;
+      }
+      if (isFemale && /^F\s*:/i.test(p)) {
+        ref = p.replace(/^F\s*:\s*/i, "");
+        break;
+      }
+    }
+  }
+
+  /* ===================================================
+     🔥 STEP 2B: LIPID STYLE →  M - < 3.55, F - < 3.22
+  =================================================== */
+  if ((isMale || isFemale) && /[MF]\s*-\s*</i.test(ref)) {
+    const parts = ref.split(",").map(p => p.trim());
+
+    for (const p of parts) {
+      if (isMale && /^M\s*-\s*</i.test(p)) {
+        ref = p.replace(/^M\s*-\s*/i, "");
+        break;
+      }
+      if (isFemale && /^F\s*-\s*</i.test(p)) {
+        ref = p.replace(/^F\s*-\s*/i, "");
+        break;
+      }
+    }
+  }
+
+  // commas hatao
+  ref = ref.replace(/,/g, "");
+
+  /* ================= RANGE: min - max ================= */
   let match = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
   if (match) {
     const min = parseFloat(match[1]);
@@ -537,8 +586,16 @@ function checkFlag(result, refList, gender) {
     return { flag: "" };
   }
 
-  /* ================= RANGE: Upto 30 ================= */
-  match = ref.match(/upto\s*([\d.]+)/i);
+  /* ================= RANGE: Upto ================= */
+  match = ref.match(/upto\s*-?\s*([\d.]+)/i);
+  if (match) {
+    const max = parseFloat(match[1]);
+    if (value > max) return { flag: "H" };
+    return { flag: "" };
+  }
+
+  /* ================= RANGE: < ================= */
+  match = ref.match(/<\s*([\d.]+)/);
   if (match) {
     const max = parseFloat(match[1]);
     if (value > max) return { flag: "H" };
@@ -658,6 +715,7 @@ content.id = "page-content";
 
 
 liverHeaderPrinted = false;
+lipidHeaderPrinted = false;
 window.serologyHeaderPrinted = false;
 window.kidneyHeaderPrinted = false;
 window.crpHeaderPrinted = false;
@@ -700,8 +758,12 @@ function renderTest(testKey) {
 let rowClass = "";
 
 if (result && f[2]) {
-  const refList = f[2].split("|").map(r => r.trim());
-  const { flag } = checkFlag(result, refList, patient.gender);
+ const { flag } = checkFlag(
+  result,
+  [f[2]],          // 🔥 full ref string
+  patient.gender
+);
+
   if (flag) {
     flagHTML = ` <span class="flag shift-flag">${flag}</span>`;
     rowClass = "abnormal-value";
@@ -849,6 +911,63 @@ else if (test.class === "LIVER FUNCTION TEST") {
       </tr>
     `;
     liverHeaderPrinted = true;
+  }
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
+}
+/* ================= LIPID PROFILE  ================= */
+else if (test.class === "LIPID REPORT") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  if (!lipidHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">BIOCHEMISTRY REPORT</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+      <tr class="bio-subtitle">
+        <th colspan="4">LIPID PROFILE</th>
+      </tr>
+    `;
+    lipidHeaderPrinted = true;
   }
 
   test.fields.forEach(f => {
@@ -1576,6 +1695,7 @@ selectedTests.forEach(testKey => {
     currentTestsBox.appendChild(block);
 
     window.liverHeaderPrinted = false;
+    window.lipidHeaderPrinted = false;
     window.serologyHeaderPrinted = false;
     window.kidneyHeaderPrinted = false;
     window.crpHeaderPrinted = false;
