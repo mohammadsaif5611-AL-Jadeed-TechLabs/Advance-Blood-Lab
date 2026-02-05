@@ -79,7 +79,7 @@ function renderSerologyGroup() {
   let combinedTableOpen = false;
   let combinedHTML = "";
 
-  const COMBINED_SEROLOGY_SECTIONS = ["HBsAg", "HCV", "HIV"];
+  const COMBINED_SEROLOGY_SECTIONS = ["AUSTRALIA ANTIGEN", "HCV", "HIV"];
   function isCombinedSerology(sectionName = "") {
     if (!sectionName) return false;
     const name = sectionName.toUpperCase();
@@ -97,6 +97,15 @@ function renderSerologyGroup() {
       const section = test.sections?.[index];
       if (!section) return;
 
+      // 🔥 WIDAL ABSOLUTE GUARD (before hasValue)
+if (
+  section.name?.toUpperCase().includes("WIDAL") &&
+  !(selectedSerology[testKey] || []).includes(index)
+) {
+  return;
+}
+
+
       const hasValue =
         (Array.isArray(section.fields) &&
           section.fields.some(f => {
@@ -108,10 +117,13 @@ function renderSerologyGroup() {
           section.result.some(r => {
             const key = makeKey(testKey, r.name || "Result");
             const v = report[key];
-            return v && v !== "" && v !== "Negative"; // 🔥 DEFAULT IGNORE
+            return v && v !== "" && v !== "NEGATIVE"; // 🔥 DEFAULT IGNORE
           }));
 
       if (!hasValue) return;
+
+
+
 
       if (!currentPage) newPage();
 
@@ -137,11 +149,23 @@ function renderSerologyGroup() {
           combinedTableOpen = true;
         }
 
+// 🔥 ONLY HIV ke liye heading
+if (isCombined && section.name.toUpperCase().includes("HIV")) {
+  combinedHTML += `
+    <tr class="bio-subtitle">
+      <th colspan="2" style="text-align:left; padding-left:6px;">
+        REPORT ON HIV
+      </th>
+    </tr>
+  `;
+}
+
+
         // 🔹 Add section heading inside combined table
         combinedHTML += `
           <tr class="test-title">
-            <th colspan="2" style="text-align:left; font-size: 16px;
-    padding-left: 6px;">${section.name.toUpperCase()}</th>
+            <th colspan="2" style="text-align:left; font-size: 19px;
+    padding-left: 6px;"></th>
             </tr>
         `;
       } else {
@@ -198,12 +222,28 @@ function renderSerologyGroup() {
 
         if (!ns1Value && iggIgmValues.length === 0) return;
 
+      if (section.sub?.length) {
+  const rowHTML = `
+    <tr class="bio-sub-row">
+      <td colspan="2" style="font-weight:600">DENGUE NS1 Antigen</td>
+    </tr>
+  `;
+  if (isCombined) combinedHTML += rowHTML;
+  else html += rowHTML;
+}
+
+
         if (ns1Value) {
+const isNs1Positive = isPositiveSerology(ns1Value);
+          
           const rowHTML = `
             <tr class="test-row">
-              <td class="mono-space">${ns1Field[0]}</td>
+              <td class="mono-space"">${ns1Field[0]}</td>
               <td class="td-result">
-                <span class="result-value">${ns1Value}</span>
+               <span class="result-value" style="${isNs1Positive ? 'font-weight:bold' : ''}">
+  ${ns1Value}
+</span>
+
               </td>
             </tr>
           `;
@@ -211,21 +251,25 @@ function renderSerologyGroup() {
           else html += rowHTML;
         }
 
-        section.sub?.forEach(s => {
-          const rowHTML = `
-            <tr class="bio-sub-row">
-              <td colspan="2">${s}</td>
-            </tr>
-          `;
-          if (isCombined) combinedHTML += rowHTML;
-          else html += rowHTML;
-        });
+          // sub lines
+  section.sub.forEach(s => {
+    const rowHTML = `
+      <tr class="bio-para-row" style="  
+    font-size: 13.5px;">
+        <td colspan="2">${s}</td>
+      </tr>
+    `;
+    if (isCombined) combinedHTML += rowHTML;
+    else html += rowHTML;
+  });
+
+       
 
         section.para?.forEach(p => {
           p.split(/\n|<br\s*\/?>/i).forEach(line => {
             if (!line.trim()) return;
             const rowHTML = `
-              <tr class="bio-para-row">
+              <tr class="bio-para-row" style="text-align: justify; font-size:14px;">
                 <td colspan="2">${line.trim()}</td>
               </tr>
             `;
@@ -264,8 +308,8 @@ function renderSerologyGroup() {
           p.split(/\n|<br\s*\/?>/i).forEach(line => {
             if (!line.trim()) return;
             const rowHTML = `
-              <tr class="bio-para-row">
-                <td colspan="2">${line.trim()}</td>
+              <tr class="bio-para-row" style="text-align: justify; font-size:14px;">
+                <td colspan="2" style="line-height:1.4;">${line.trim()}</td>
               </tr>
             `;
             if (isCombined) combinedHTML += rowHTML;
@@ -375,18 +419,27 @@ function renderSerologyGroup() {
           else html += rowHTML;
         });
 
-        section.para?.forEach(p => {
-          p.split(/\n|<br\s*\/?>/i).forEach(line => {
-            if (!line.trim()) return;
-            const rowHTML = `
-              <tr class="bio-para-row">
-                <td colspan="2">${line.trim()}</td>
-              </tr>
-            `;
-            if (isCombined) combinedHTML += rowHTML;
-            else html += rowHTML;
-          });
-        });
+       section.para?.forEach(p => {
+  p.split(/\n|<br\s*\/?>/i).forEach(line => {
+    if (!line.trim()) return;
+
+    const isHIV = section.name.toUpperCase().includes("HIV");
+    const style = isHIV
+      ? "text-align:justify; line-height:1.4;font-size:13.5px;"
+      : "";
+
+    const rowHTML = `
+      <tr class="bio-para-row">
+        <td colspan="2" style="${style}">
+          ${line.trim()}
+        </td>
+      </tr>
+    `;
+    if (isCombined) combinedHTML += rowHTML;
+    else html += rowHTML;
+  });
+});
+
 
         section.para2?.forEach(p => {
           p.split(/\n|<br\s*\/?>/i).forEach(line => {
@@ -402,9 +455,12 @@ function renderSerologyGroup() {
         });
       }
 
-      html += `</table>`;
-      block.innerHTML = html;
-      if (!isCombined) currentTestsBox.appendChild(block);
+      if (!isCombined) {
+  html += `</table>`;
+  block.innerHTML = html;
+  currentTestsBox.appendChild(block);
+}
+
 
       // 🔹 Separator after each combined section
       if (isCombined) {
@@ -706,7 +762,7 @@ else if (test.title === "BIOCHEMISTRY REPORT" && test.subtitle && !test.class) {
   `;
 }
 
-const postUrineKey = makeKey(testKey, "PARALLEL URINE SUGAR");
+const postUrineKey = makeKey(testKey, "BLOOD SUGAR POSTMEAL");
 const hasPostUrineValue = report[postUrineKey] && report[postUrineKey] !== "";
 
 
@@ -998,8 +1054,10 @@ else if (test.class === "CRP SEROLOGY TEST") {
       <tr class="test-head">
         <th>INVESTIGATION</th>
         <th>RESULT</th>
-        <th>UNIT</th>
-        <th>REFERENCE RANGE</th>
+        <th style="
+    width: 9%;">UNIT</th>
+        <th style="
+    width: 24%;">REFERENCE RANGE</th>
       </tr>
     `;
     window.crpHeaderPrinted = true;
@@ -1059,7 +1117,7 @@ else if (test.class === "CRP SEROLOGY TEST") {
       }
       if (f.para) {
         html += `
-          <tr class="bio-para-row">
+          <tr class="bio-para-row" style="text-align:justify; line-height:1.4;">
             <td colspan="4">${f.para}</td>
           </tr>
         `;
@@ -1084,7 +1142,6 @@ else if (test.class === "CRP SEROLOGY TEST") {
 
     html += `
       <tr class="bio-subtitle">
-        <th colspan="4">RHEUMATOID FACTOR (RA)</th>
       </tr>
     `;
 
