@@ -576,6 +576,46 @@ function checkFlag(result, refList, gender) {
   // commas hatao
   ref = ref.replace(/,/g, "");
 
+    /* ===================================================
+     🔥 STEP 3: HBA1c SPECIAL LOGIC
+     Non-Diabetic | Pre Diabetic | Diabetic
+  =================================================== */
+  if (/non\s*[- ]?diabetic|pre\s*[- ]?diabetic|diabetic/i.test(ref)) {
+
+    // Extract numbers safely
+    // ≤ 5.6
+    const nonMatch = ref.match(/≤\s*([\d.]+)/);
+    // 5.7 - 6.4
+    const preMatch = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
+    // ≥ 6.5
+    const diaMatch = ref.match(/≥\s*([\d.]+)/);
+
+    if (nonMatch) {
+      const nonMax = parseFloat(nonMatch[1]);
+      if (value <= nonMax) {
+        return { flag: "" }; // ✅ normal
+      }
+    }
+
+    if (preMatch) {
+      const preMin = parseFloat(preMatch[1]);
+      const preMax = parseFloat(preMatch[2]);
+      if (value >= preMin && value <= preMax) {
+        return { flag: "PRE" }; // ⚠️ pre-diabetic
+      }
+    }
+
+    if (diaMatch) {
+      const diaMin = parseFloat(diaMatch[1]);
+      if (value >= diaMin) {
+        return { flag: "H" }; // 🔥 diabetic
+      }
+    }
+
+    return { flag: "" };
+  }
+
+
   /* ================= RANGE: min - max ================= */
   let match = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
   if (match) {
@@ -587,6 +627,8 @@ function checkFlag(result, refList, gender) {
     return { flag: "" };
   }
 
+
+  
   /* ================= RANGE: Upto ================= */
   match = ref.match(/upto\s*-?\s*([\d.]+)/i);
   if (match) {
@@ -1239,6 +1281,94 @@ const genderRef = gender === "M" ? f.ref.M : f.ref.F;
     `;
   });
 }
+/* ================= GHb/HBA1c ================= */
+/* ================= GHb/HBA1c ================= */
+else if (test.class === "GHb/HBA1c") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key || f.name);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* ===== TITLE + SUBTITLE ===== */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+
+
+  html += `
+    <tr class="test-head">
+      <th>INVESTIGATION</th>
+      <th>RESULT</th>
+      <th>UNIT</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+  if (test.subtitle) {
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="4">${test.subtitle}</th>
+      </tr>
+    `;
+  }
+  /* ===== FIELDS ===== */
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key || f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    // ✅ SIMPLE RANGE CHECK (NO GENDER)
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref]);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td>${f.unit || ""}</td>
+        <td class="td-ref">
+          ${f.ref || ""}
+        </td>
+      </tr>
+      
+    `;
+   
+  });
+
+  /* ===== AFTER / NOTES SECTION ===== */
+  if (Array.isArray(test.after) && test.after.length) {
+    html += `
+      <tr class="no-page-break">
+       <tr class="bio-sub-row">
+        <td colspan="4"><hr style="border-bottom:1px dashed #000000; margin:2px 0;"></td>
+      </tr>
+        <td colspan="4" style="padding-top:6px">
+          ${test.after
+            .map(line => `<div style="line-height:1.35; padding-top: 4px;">${line}</div>`)
+            .join("")}
+        </td>
+      </tr>
+      
+    `;
+  }
+}
+
 /* ================= SERUM CALCIUM ================= */
 /* ================= SERUM CALCIUM ================= */
 else if (test.class === "SERUM CALCIUM") {
