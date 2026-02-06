@@ -1088,7 +1088,7 @@ const hasElectrolyteValue = electrolyteFields.some(name => {
     `;
   });
 }
-/* ================= KIDNEY FUNCTION TEST ================= */
+/* ================= COAGULATION PROFILE REPORT ================= */
 else if (test.class === "COAGULATION") {
 
   const hasValue = test.fields.some(f => {
@@ -1137,7 +1137,7 @@ const hasPROTHROMBINeValue = PROTHROMBINFields.some(name => {
 
   html += `
     <tr class="bio-sub-row">
-      <td colspan="4" class="bio-sub-left" style="font-weight:600;">
+      <td colspan="4" class="bio-sub-left" style="font-weight:700;">
         ${f.sub}
       </td>
     </tr>
