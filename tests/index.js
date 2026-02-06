@@ -6,7 +6,9 @@ import BLOOD_SR from "./BLOOD_SUGAR_R.js";
 // biochem----
 import LIVER_FUNCTION from "./LIVER_FUNCTION.js";
 import KIDNEY_FUNCTION from "./KIDNEY_FUNCTION.js";
+import COAGU from "./COAGUL.js";
 import LIPID from "./LIPID.js";
+import SRCAL from "./SERUM_CAL.js";
 
 // SEROLOGY --
 import CRP from "./CRP_SEROLOGY.js";
@@ -25,7 +27,9 @@ export default {
   BLOOD_SR,
   LIVER_FUNCTION,
   KIDNEY_FUNCTION,
+  COAGU,
   LIPID,
+  SRCAL,
   CRP,
   SEROLOGY,
 
