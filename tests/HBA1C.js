@@ -13,7 +13,7 @@ export default {
     },
     {
       name: "Estimated Average Glucose (eAG)",
-      unit: "%",
+      unit: "mg/dl",
       ref: "70 - 136"
     }
   ],
