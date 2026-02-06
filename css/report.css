@@ -363,6 +363,8 @@ table {
 
 /* ===== TABLE ROWS ===== */
 .test-row td {
+  
+  vertical-align: middle !important;
     font-size: 15px;
     /* font-weight: 500; */
     /* border: 1px solid #000; */
@@ -376,6 +378,17 @@ table {
 .test-row td:nth-child(4) {
   text-align: left;;
 }
+.test-row {
+  vertical-align: middle;
+}
+
+/* .td-result .result-value,
+.td-result .flag {
+  position: relative;
+  top: 50%;
+  transform: translateY(0%);
+} */
+
 
 /* RESULT LOOK (OPTIONAL BOLD LIKE REPORT) */
 /* .td-result {
@@ -425,10 +438,19 @@ table {
 }
 
 .td-result {
-  display: flex;
+  position: relative; 
+  /* display: flex;           */
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  height: 100%;               /* 🔥 MOST IMPORTANT */
+  white-space: nowrap;
 }
+.td-result {
+  white-space: nowrap;
+  padding-top: 16px;
+   padding-bottom: 0;
+}
+
 
 /* value part */
 .result-value {
