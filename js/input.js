@@ -190,6 +190,9 @@ const isSEROLOGY = test =>
 const isESR = test =>
   String(test.key || "").toUpperCase() === "ESR";
   //HEMATOLOGYESR
+const isHBA = test =>
+  String(test.key || "").toUpperCase() === "HBA";
+  //HEMATOLOGYESR
 const isSRCAL = test =>
   String(test.key || "").toUpperCase() === "SRCAL";
 
@@ -363,6 +366,38 @@ else if (isLPT(test)) {
 }
 // ====================== HEMATOLOGY : ESR TEST ======================
 else if (isESR(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== HBA1c TEST ======================
+else if (isHBA(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
