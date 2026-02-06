@@ -24,6 +24,7 @@ window.liverHeaderPrinted = false;
 window.lipidHeaderPrinted = false;
 window.serologyHeaderPrinted = false;
 window.kidneyHeaderPrinted = false;
+    window.COAGUHeaderPrinted = false;
 window.crpHeaderPrinted = false;
 window.esrHeaderPrinted = false;
 
@@ -718,6 +719,7 @@ liverHeaderPrinted = false;
 lipidHeaderPrinted = false;
 window.serologyHeaderPrinted = false;
 window.kidneyHeaderPrinted = false;
+    window.COAGUHeaderPrinted = false;
 window.crpHeaderPrinted = false;
 
 
@@ -1086,6 +1088,93 @@ const hasElectrolyteValue = electrolyteFields.some(name => {
     `;
   });
 }
+/* ================= KIDNEY FUNCTION TEST ================= */
+else if (test.class === "COAGULATION") {
+
+  const hasValue = test.fields.some(f => {
+    if (f.sub) return false;
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  // ✅ Independent header flag for KFT
+  if (!window.COAGUHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">COAGULATION PROFILE REPORT</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+    
+    `;
+    window.COAGUHeaderPrinted = true;
+  }
+
+  const PROTHROMBINFields = [
+  "Patient Value (PT)",
+"Control Value (CT)",
+"Prothrombin Index",
+"Prothrombin Ratio",
+"I.S.I. Value",
+"International Normalised Ratio (INR)",
+];
+
+const hasPROTHROMBINeValue = PROTHROMBINFields.some(name => {
+  const k = makeKey(testKey, name);
+  return report[k] && report[k] !== "";
+});
+
+  test.fields.forEach(f => {
+
+  if (f.sub) {
+  if (!hasPROTHROMBINeValue) return;
+
+  html += `
+    <tr class="bio-sub-row">
+      <td colspan="4" class="bio-sub-left" style="font-weight:600;">
+        ${f.sub}
+      </td>
+    </tr>
+  `;
+  return;
+}
+
+
+
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref], patient.gender);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
+}
 /* ================= HEMATOLOGY : ESR ================= */
 else if (test.class === "HEMATOLOGYESR") {
 
@@ -1150,6 +1239,74 @@ const genderRef = gender === "M" ? f.ref.M : f.ref.F;
     `;
   });
 }
+/* ================= SERUM CALCIUM ================= */
+/* ================= SERUM CALCIUM ================= */
+else if (test.class === "SERUM CALCIUM") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key || f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  if (!window.esrHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">${test.title}</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+    `;
+    window.esrHeaderPrinted = true;
+  }
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key || f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(
+        result,
+        [f.ref],          // 🔥 direct string
+        patient.gender
+      );
+
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+
+    <td style="
+    FONT-WEIGHT: 700;
+">  ${test.subtitle}</td>
+      <tr class="test-row">
+     
+       
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td>${f.unit}</td>
+        <td>${f.ref}</td>
+      </tr>
+    `;
+  });
+}
+
 
 
 /* ================= SEROLOGY : CRP & RA TEST ================= */
@@ -1698,6 +1855,7 @@ selectedTests.forEach(testKey => {
     window.lipidHeaderPrinted = false;
     window.serologyHeaderPrinted = false;
     window.kidneyHeaderPrinted = false;
+    window.COAGUHeaderPrinted = false;
     window.crpHeaderPrinted = false;
   }
 });
