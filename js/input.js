@@ -174,6 +174,9 @@ const isLPT = test =>
   // BIOCHEM---KIDNEYFUNCTION
 const isKFT = test =>
   String(test.class || "").toUpperCase() === "KIDNEY FUNCTION TEST";
+  //COAGULATION
+const isCOAGU = test =>
+  String(test.class || "").toUpperCase() === "COAGULATION";
 
   // SEROLOGY ---CRP
 const isCRP = test =>
@@ -186,6 +189,9 @@ const isSEROLOGY = test =>
   //HEMATOLOGYESR
 const isESR = test =>
   String(test.key || "").toUpperCase() === "ESR";
+  //HEMATOLOGYESR
+const isSRCAL = test =>
+  String(test.key || "").toUpperCase() === "SRCAL";
 
 
 
@@ -387,8 +393,72 @@ else if (isESR(test)) {
 
   html += `</div>`;
 }
+// ====================== SERUM CALCIUM ======================
+else if (isSRCAL(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
 // ====================== BIOCHEMISTRY : KIDNEY FUNCTION TEST ======================
 else if (isKFT(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== COAGULATION TEST ======================
+else if (isCOAGU(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
