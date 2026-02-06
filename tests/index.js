@@ -10,6 +10,8 @@ import COAGU from "./COAGUL.js";
 import LIPID from "./LIPID.js";
 import SRCAL from "./SERUM_CAL.js";
 
+import HBA from "./HBA1C.js";
+
 // SEROLOGY --
 import CRP from "./CRP_SEROLOGY.js";
 import SEROLOGY from "./SEROLOGY.js";
@@ -30,6 +32,7 @@ export default {
   COAGU,
   LIPID,
   SRCAL,
+  HBA,
   CRP,
   SEROLOGY,
 
