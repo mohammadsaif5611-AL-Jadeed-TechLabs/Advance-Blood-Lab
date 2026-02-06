@@ -330,7 +330,7 @@ td {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 4mm;
+  margin-bottom: 1mm;
 }
 
 /* ===== TEST TITLE ===== */
@@ -447,7 +447,7 @@ table {
 }
 .td-result {
   white-space: nowrap;
-  padding-top: 16px;
+  padding-top: 6px;
    padding-bottom: 0;
 }
 
@@ -552,7 +552,7 @@ table {
 
 /* prevent footer overlap */
 .category-block:last-child {
-  margin-bottom: 8mm;
+  margin-bottom: 0;
 }
 .mono-space {
   white-space: pre;        /* 🔥 MOST IMPORTANT */
