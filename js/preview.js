@@ -180,7 +180,7 @@ if (isCombined && section.name.toUpperCase().includes("HIV")) {
             </tr>
             <tr class="test-head">
               <th>INVESTIGATION</th>
-              <th style="width:40%;">RESULT</th>
+              <th style="width:50%;">RESULT</th>
             </tr>
         `;
       }
