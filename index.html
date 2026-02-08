@@ -21,16 +21,32 @@
 
   <h5 class="mb-3">Patient Information</h5>
 
-  <label>Patient Name</label>
-  <input
+<label>Patient Name</label>
+
+<!-- <div class="d-flex mb-2"> -->
+  <!-- PREFIX -->
+  <select class="form-control  mb-2" id="prefix" onchange="updateNameAndSex()">
+    <option value="MR.">MR.</option>
+    <option value="MASTER.">MASTER.</option>
+    <option value="MRS." selected>MRS.</option>
+    <option value="MISS.">MISS.</option>
+    <option value="BABY/MISS.">BABY/MISS.</option>
+    <option value="BABY/OF.">BABY/OF.</option>
+
+  </select>
+
+  <!-- NAME -->
+ 
+
+ <input
     class="form-control mb-2"
     id="patient_name"
     placeholder="PATIENT NAME"
-    
-  value="MRS. SAFIYA ANJUM"
-    oninput="toUpperCaseInput(this); autoSelectGender();"
+    value="PATIENT NAME"
+    oninput="toUpperCaseInput(this)"
     required
   />
+
 
   <label>Referred By</label>
   <input
@@ -42,13 +58,12 @@
   />
 
   <label>Sample</label>
-  <input
-    class="form-control mb-2 input"
-    id="sample"
-    placeholder="SAMPLE"
-    oninput="toUpperCaseInput(this)"
-    value="RECEIVED FROM OUTSIDE"
-  />
+ 
+  <select class="form-control mb-2" id="sample">
+  <option value="RECEIVED FROM OUTSIDE" selected>RECEIVED FROM OUTSIDE</option>
+  <option value="RECEIVED FROM HOSPITAL">RECEIVED FROM HOSPITAL</option>
+  <option value="COLLECTED IN LAB">COLLECTED IN LAB</option>
+</select>
 
   <div class="row">
     <div class="col-md-6">
@@ -65,12 +80,13 @@
     </div>
 
     <div class="col-md-6">
-      <label>Sex</label>
-      <select class="form-control mb-2" id="sex">
-        <option>Male</option>
-        <option selected>Female</option>
-        <option>Other</option>
-      </select>
+     <label>Sex</label>
+<select class="form-control mb-2" id="sex">
+  <option value="Male">Male</option>
+  <option value="Female" selected>Female</option>
+  <option value="Other">Other</option>
+</select>
+
     </div>
   </div>
 
@@ -154,41 +170,56 @@ body {
 </style>
 <script>
     /* ===== FORCE UPPERCASE ===== */
-  function toUpperCaseInput(el) {
-    el.value = el.value.toUpperCase();
-  }
-
+ 
   /* ===== NUMBER ONLY ===== */
   function onlyNumber(el) {
     el.value = el.value.replace(/[^0-9]/g, "");
   }
 
-  /* ===== AUTO GENDER DETECT ===== */
- function autoSelectGender() {
+
+  function toUpperCaseInput(el) {
+    el.value = el.value.toUpperCase();
+  }
+
+
+function updateNameAndSex() {
+  const prefix = document.getElementById("prefix")?.value || "";
   const nameInput = document.getElementById("patient_name");
   const sexSelect = document.getElementById("sex");
 
   if (!nameInput || !sexSelect) return;
 
-  const name = nameInput.value.trim().toUpperCase();
+  // Remove ANY existing prefix
+  let name = nameInput.value.toUpperCase();
+  name = name.replace(
+    /^(MR\.|MASTER\.|MRS\.|MISS\.|BABY\/MISS\.|BABY\/OF\.)\s*/g,
+    ""
+  );
 
-  if (name.startsWith("MR. ")) {
+  // Add selected prefix
+  nameInput.value = `${prefix} ${name}`.trim();
+
+  // Auto sex logic
+  const malePrefixes = ["MR.", "MASTER.", "BABY/OF."];
+  const femalePrefixes = ["MRS.", "MISS.", "BABY/MISS."];
+
+  if (malePrefixes.includes(prefix)) {
     sexSelect.value = "Male";
-  } 
-  else if (
-    name.startsWith("MRS. ") ||
-    name.startsWith("MS. ") ||
-    name.startsWith("MISS. ")
-  ) {
+  } else if (femalePrefixes.includes(prefix)) {
     sexSelect.value = "Female";
   }
 }
 
-   // Auto set current date
+
+  // Auto set date
   document.addEventListener("DOMContentLoaded", () => {
     const today = new Date().toISOString().split("T")[0];
     document.getElementById("date").value = today;
+
+    // Run once on load
+    updateNameAndSex();
   });
 </script>
-</html>
 
+</script>
+</html>
