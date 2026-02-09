@@ -1,5 +1,9 @@
 import { supabase } from "./supabase.js";
 
+const BASE_PATH = window.location.hostname.includes("github.io")
+  ? "/Advance-Blood-Lab"
+  : "";
+
 /* ========= LOGIN ========= */
 export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -27,10 +31,10 @@ export async function login(email, password) {
   }
 
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
 
   const expiry = new Date(licence.expiry_date);
-  expiry.setHours(0,0,0,0);
+  expiry.setHours(0, 0, 0, 0);
 
   if (!licence.is_active || today >= expiry) {
     await supabase.auth.signOut();
@@ -41,7 +45,7 @@ export async function login(email, password) {
     return;
   }
 
-  window.location.href = "/index.html";
+  window.location.href = `${BASE_PATH}/index.html`;
 }
 
 /* ========= PAGE PROTECT ========= */
@@ -49,7 +53,7 @@ export async function protectPage() {
   const { data } = await supabase.auth.getSession();
 
   if (!data.session) {
-    window.location.href = "./auth/login.html";
+    window.location.href = `${BASE_PATH}/auth/login.html`;
     return;
   }
 
@@ -63,15 +67,15 @@ export async function protectPage() {
 
   if (error || !licence) {
     await supabase.auth.signOut();
-    window.location.href = "./auth/login.html";
+    window.location.href = `${BASE_PATH}/auth/login.html`;
     return;
   }
 
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
 
   const expiry = new Date(licence.expiry_date);
-  expiry.setHours(0,0,0,0);
+  expiry.setHours(0, 0, 0, 0);
 
   if (!licence.is_active || today >= expiry) {
     await supabase.auth.signOut();
@@ -79,12 +83,12 @@ export async function protectPage() {
       "Your subscription has expired.\n" +
       "Contact Aljadeed Tech Labs to increase your subscription licence."
     );
-    window.location.href = "./auth/login.html";
+    window.location.href = `${BASE_PATH}/auth/login.html`;
   }
 }
 
 /* ========= LOGOUT ========= */
 export async function logout() {
   await supabase.auth.signOut();
-  window.location.href = "./auth/login.html";
+  window.location.href = `${BASE_PATH}/auth/login.html`;
 }
