@@ -31,20 +31,19 @@
     padding-right: 45px;
   }
 
-  .password-toggle {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #555;
-    z-index: 5;
-    font-size: 18px;
-  }
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #5f6368; /* Google grey */
+}
 
-  .password-toggle:hover {
-    color: #000;
-  }
+.password-toggle:hover {
+  color: #202124;
+}
+
   /* Hide default browser password reveal icon */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear {
@@ -94,10 +93,37 @@ input[type="password"]::-webkit-textfield-decoration-container {
     placeholder="Password"
   />
 
-  <i
-    class="fa-solid fa-eye password-toggle"
-    id="togglePassword"
-  ></i>
+<span class="password-toggle" id="togglePassword">
+  <!-- Eye (hidden state) -->
+  <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg"
+       width="22" height="22" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20
+             c-7 0-11-8-11-8
+             a21.86 21.86 0 0 1 5.06-6.94"/>
+    <path d="M1 1l22 22"/>
+    <path d="M9.9 4.24A10.94 10.94 0 0 1 12 4
+             c7 0 11 8 11 8
+             a21.86 21.86 0 0 1-4.87 6.94"/>
+  </svg>
+
+  <!-- Eye (visible state) -->
+  <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg"
+       width="22" height="22" viewBox="0 0 24 24"
+       fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round"
+       style="display:none">
+    <path d="M1 12s4-8 11-8
+             11 8 11 8
+             -4 8-11 8
+             -11-8-11-8z"/>
+    <circle cx="12" cy="12" r="3"/>
+  </svg>
+</span>
+
+
+
 </div>
 
 
@@ -127,17 +153,18 @@ input[type="password"]::-webkit-textfield-decoration-container {
 <script>
   const password = document.getElementById("password");
   const toggle = document.getElementById("togglePassword");
+  const eyeOpen = document.getElementById("eyeOpen");
+  const eyeClosed = document.getElementById("eyeClosed");
 
   toggle.addEventListener("click", () => {
-    if (password.type === "password") {
-      password.type = "text";
-      toggle.classList.replace("fa-eye", "fa-eye-slash");
-    } else {
-      password.type = "password";
-      toggle.classList.replace("fa-eye-slash", "fa-eye");
-    }
+    const isHidden = password.type === "password";
+
+    password.type = isHidden ? "text" : "password";
+    eyeOpen.style.display = isHidden ? "block" : "none";
+    eyeClosed.style.display = isHidden ? "none" : "block";
   });
 </script>
+
 
 
 
