@@ -49,7 +49,7 @@ export async function protectPage() {
   const { data } = await supabase.auth.getSession();
 
   if (!data.session) {
-    window.location.href = "/auth/login.html";
+    window.location.href = "./auth/login.html";
     return;
   }
 
@@ -63,7 +63,7 @@ export async function protectPage() {
 
   if (error || !licence) {
     await supabase.auth.signOut();
-    window.location.href = "/auth/login.html";
+    window.location.href = "./auth/login.html";
     return;
   }
 
@@ -79,12 +79,12 @@ export async function protectPage() {
       "Your subscription has expired.\n" +
       "Contact Aljadeed Tech Labs to increase your subscription licence."
     );
-    window.location.href = "/auth/login.html";
+    window.location.href = "./auth/login.html";
   }
 }
 
 /* ========= LOGOUT ========= */
 export async function logout() {
   await supabase.auth.signOut();
-  window.location.href = "/auth/login.html";
+  window.location.href = "./auth/login.html";
 }
