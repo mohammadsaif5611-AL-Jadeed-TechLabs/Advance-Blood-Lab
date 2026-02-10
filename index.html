@@ -8,7 +8,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
  
-<!-- Supabase auth + page protection -->
+<!-- Supabase auth + page protection script same for both git and local -->
 <script type="module">
   import { protectPage, logout } from "./js/auth.js";
 
@@ -263,10 +263,56 @@ function updateNameAndSex() {
     updateNameAndSex();
   });
 </script>
+<script type="module">
+  import { supabase } from "./js/supabase.js";
 
+  async function showLicenceAlert() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) return;
+
+    const userId = sessionData.session.user.id;
+
+    const { data: licence, error } = await supabase
+      .from("user_licence")
+      .select("expiry_date")
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !licence) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(licence.expiry_date);
+    expiry.setHours(0, 0, 0, 0);
+
+    const diffMs = expiry - today;
+    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    const expiryText = expiry.toLocaleDateString("en-GB");
+
+    /* ✅ ALWAYS SHOW ON DASHBOARD LOAD */
+    alert(`This subscription expires on ${expiryText}`);
+
+    /* ⚠️ 3 DAYS WARNING (MAX 2 TIMES / DAY) */
+    if (daysLeft > 0 && daysLeft <= 3) {
+      const todayKey = new Date().toISOString().split("T")[0];
+      const storageKey = `licence_warning_${todayKey}`;
+      const shown = Number(localStorage.getItem(storageKey)) || 0;
+
+      if (shown < 2) {
+        alert(
+          `⚠️ Subscription expires soon in ${daysLeft} day(s).\n` +
+          `Please contact Aljadeed Tech Labs.`
+        );
+        localStorage.setItem(storageKey, shown + 1);
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", showLicenceAlert);
 </script>
+
+
+
 </html>
-
-
-
-
