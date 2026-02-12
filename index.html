@@ -31,15 +31,60 @@
 </head>
 
 <body class="bg-light">
+
+<!-- ===== PREMIUM NAVBAR ===== -->
+<nav class="premium-navbar">
+  <div class="nav-container">
+
+    <div class="nav-left">
+      <!-- <span class="brand-logo">🧪</span> -->
+      <img style="width: 100px;height: 80px;" class="brand-logo" src="assets/BG.jpg" alt="">
+      <span class="brand-text">Advance Blood Lab</span>
+    </div>
+
+    <div class="nav-right" id="navMenu">
+      <a href="history.html" class="nav-btn history-btn">
+        History
+      </a>
+
+      <button id="logoutBtn" class="nav-btn logout-btn">
+        Logout
+      </button>
+    </div>
+
+    <div class="nav-toggle" id="navToggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+
+  </div>
+</nav>
+
   
 
 <div class="container mt-4">
- <div class="d-flex justify-content-between align-items-center mb-3">
+
+  <!-- ===== SUBSCRIPTION CARD ===== -->
+<div id="subscriptionCard"
+     class="card border-warning mb-3 shadow-sm"
+     style="display:none;">
+  <div class="card-body py-2">
+    <strong id="subscriptionText"></strong>
+  </div>
+</div>
+
+
+
+ <!-- <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Patient Details</h4>
+    <button  class="btn btn-danger btn-sm">
+      <a href="history.html">History </a>
+    </button>
     <button id="logoutBtn" class="btn btn-danger btn-sm">
       Logout
     </button>
-  </div>
+  </div> -->
 
 
  <form id="patientForm" class="card p-3">
@@ -136,6 +181,9 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 <style>
   /* =====================
@@ -157,6 +205,103 @@ body {
     padding: 10px;
     border-radius: 7px;
   }
+
+
+  /* =============================
+   PREMIUM NAVBAR (Google + IG UI)
+============================= */
+
+.premium-navbar {
+  background: #ffffff;
+  padding: 14px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.nav-container {
+  width: 92%;
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  font-size: 22px;
+}
+
+.brand-text {
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-btn {
+  border: none;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.3s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Google style soft button */
+.history-btn {
+  background: #f1f3f4;
+  color: #202124;
+}
+
+.history-btn:hover {
+  background: #e8eaed;
+  transform: translateY(-1px);
+}
+
+/* Instagram style gradient logout */
+.logout-btn {
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  color: #fff;
+}
+.logout-btn {
+    background: linear-gradient(45deg, #e85d7c, #ff0000);
+    color: #fff;
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Mobile toggle */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.nav-toggle span {
+  width: 24px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+}
 
 
 /* Container full width on mobile */
@@ -205,12 +350,62 @@ body {
     border-radius: 7px;
   }
 
-  
+   .nav-right {
+    position: absolute;
+    top: 65px;
+    right: 4%;
+    background: #fff;
+    flex-direction: column;
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    display: none;
+    width: 200px;
+  }
 
+  .nav-right.active {
+    display: flex;
+  }
+
+  .nav-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .nav-toggle {
+    display: flex;
+  }
+.card-body {
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 0.25rem;
+}
+#subscriptionCard {
+  background: linear-gradient(45deg, #fff3cd, #ffe8a1);
+  border: none;
+  border-radius: 14px;
+}
+
+#subscriptionText {
+  font-size: 15px;
+  font-weight: 600;
+}
 
 }
 
 </style>
+
+<script>
+  const toggle = document.getElementById("navToggle");
+  const menu = document.getElementById("navMenu");
+
+  toggle.addEventListener("click", () => {
+    menu.classList.toggle("active");
+  });
+</script>
+
+
 <script>
     /* ===== FORCE UPPERCASE ===== */
  
@@ -266,49 +461,71 @@ function updateNameAndSex() {
 <script type="module">
   import { supabase } from "./js/supabase.js";
 
-  async function showLicenceAlert() {
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) return;
+async function showLicenceAlert() {
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return;
 
-    const userId = sessionData.session.user.id;
+  const userId = sessionData.session.user.id;
 
-    const { data: licence, error } = await supabase
-      .from("user_licence")
-      .select("expiry_date")
-      .eq("user_id", userId)
-      .single();
+  const { data: licence, error } = await supabase
+    .from("user_licence")
+    .select("expiry_date")
+    .eq("user_id", userId)
+    .single();
 
-    if (error || !licence) return;
+  if (error || !licence) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const expiry = new Date(licence.expiry_date);
 
-    const expiry = new Date(licence.expiry_date);
-    expiry.setHours(0, 0, 0, 0);
+  const card = document.getElementById("subscriptionCard");
+  const text = document.getElementById("subscriptionText");
 
-    const diffMs = expiry - today;
-    const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  card.style.display = "block";
 
-    const expiryText = expiry.toLocaleDateString("en-GB");
+  function updateCountdown() {
+    const now = new Date();
+    const diff = expiry - now;
 
-    /* ✅ ALWAYS SHOW ON DASHBOARD LOAD */
-    alert(`This subscription expires on ${expiryText}`);
-
-    /* ⚠️ 3 DAYS WARNING (MAX 2 TIMES / DAY) */
-    if (daysLeft > 0 && daysLeft <= 3) {
-      const todayKey = new Date().toISOString().split("T")[0];
-      const storageKey = `licence_warning_${todayKey}`;
-      const shown = Number(localStorage.getItem(storageKey)) || 0;
-
-      if (shown < 2) {
-        alert(
-          `⚠️ Subscription expires soon in ${daysLeft} day(s).\n` +
-          `Please contact Aljadeed Tech Labs.`
-        );
-        localStorage.setItem(storageKey, shown + 1);
-      }
+    if (diff <= 0) {
+      text.innerText = "⚠️ Subscription has expired.";
+      return;
     }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    text.innerText =
+      `Subscription expires in ${days}d ${hours}h ${minutes}m ${seconds}s`;
   }
+
+  // Run immediately
+  updateCountdown();
+
+  // Update every second
+  setInterval(updateCountdown, 1000);
+
+  /* ===== LAST 3 DAYS ALERT ===== */
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiryDate = new Date(licence.expiry_date);
+  expiryDate.setHours(0, 0, 0, 0);
+
+  const diffMs = expiryDate - today;
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+if (daysLeft > 0 && daysLeft <= 3) {
+  alert(
+    `⚠️ Subscription expires soon in ${daysLeft} day(s).\n` +
+    `Please contact Aljadeed Tech Labs.`
+  );
+}
+
+}
+
+
 
   document.addEventListener("DOMContentLoaded", showLicenceAlert);
 </script>
