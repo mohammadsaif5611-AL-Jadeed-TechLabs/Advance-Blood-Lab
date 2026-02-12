@@ -1,3 +1,58 @@
+
+import { supabase } from "./supabase.js";
+
+export async function saveReport(patientData, reportData, tests) {
+
+  const { data: sessionData } = await supabase.auth.getSession();
+
+  console.log("SESSION:", sessionData);
+
+  if (!sessionData.session) {
+    alert("Session expired. Please login again.");
+    return;
+  }
+
+  const userId = sessionData.session.user.id;
+
+  console.log("Saving for user:", userId);
+
+  const { data, error } = await supabase
+    .from("report_history")
+    .insert({
+      user_id: userId,
+      patient: patientData,
+      report: reportData,
+      tests: tests
+    })
+    .select();
+
+  console.log("Insert response:", data, error);
+
+  if (error) {
+    alert("Insert failed");
+  } else {
+    console.log("Report saved successfully");
+  }
+}
+
+
+function savePdfHistory(type, userId) {
+  if (!userId) return;
+
+  const key = `pdfHistory_${userId}`;
+  const history = JSON.parse(localStorage.getItem(key)) || [];
+
+  history.push({
+    type,
+    patient: patient.name,
+    date: new Date().toISOString()
+  });
+
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+
+// old ==================
 const MM_TO_PX = 3.78; // 96dpi standard
 
 const serologyGroup = [];
@@ -2068,7 +2123,10 @@ html2canvas: {
 
 
     })
-    .save();
+    .save()
+     .then(() => {
+      savePdfHistory("COLORED"); // 🔥 ADD THIS
+    });
 }
 
 function downloadPlainPDF() {
@@ -2110,6 +2168,7 @@ html2canvas: {
     })
     .save()
     .then(() => {
+      savePdfHistory("PLAIN");
       pdf.classList.remove("plain-mode"); // reset back
     });
 }
@@ -2117,14 +2176,47 @@ html2canvas: {
 
 /* ================= PDF ================= */
 
+// window.download = async () => {
+//   downloadColoredPDF();
+
+//   // small delay so DOM state switches cleanly
+//   setTimeout(() => {
+//     downloadPlainPDF();
+//   }, 600);
+// };
+
 window.download = async () => {
+
+  const { data: sessionData } = await supabase.auth.getSession();
+
+  if (!sessionData.session) {
+    alert("Session expired. Please login again.");
+    return;
+  }
+
+  const fromHistory = localStorage.getItem("fromHistory");
+
+  if (fromHistory !== "1") {
+    // ✅ Only first-time normal generation save hoga
+    await saveReport(patient, report, selectedTests);
+  } else {
+    console.log("Opened from history → skip saving");
+  }
+
+  // PDF download allowed in both cases
   downloadColoredPDF();
 
-  // small delay so DOM state switches cleanly
   setTimeout(() => {
     downloadPlainPDF();
   }, 600);
+
+  // 🔥 IMPORTANT: remove AFTER download click
+  localStorage.removeItem("fromHistory");
 };
+
+
+
+
 
 
 document.getElementById("downloadBtn")
