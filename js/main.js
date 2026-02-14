@@ -36,7 +36,7 @@ form.addEventListener("submit", e => {
       doctor: document.getElementById("ref_by").value,
       sample: document.getElementById("sample").value,
       date: document.getElementById("date").value,
-      lrn: document.getElementById("lrn").value
+      // lrn: document.getElementById("lrn").value
     };
 
     localStorage.setItem("patient", JSON.stringify(patient));
