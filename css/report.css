@@ -152,10 +152,10 @@ body {
   position: absolute;
   inset: 0;
   background:
-    url("../assets/top.jpeg") top center no-repeat,
+    url("../assets/advance.jpeg") top center no-repeat,
     url("../assets/bottom.jpeg") bottom center no-repeat;
   background-size:
-    100% 63mm,
+    100% 76mm,
     100% 38mm;
   z-index: 0;
    image-rendering: auto;
