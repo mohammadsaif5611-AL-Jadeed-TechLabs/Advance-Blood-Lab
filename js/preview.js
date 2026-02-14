@@ -1,39 +1,108 @@
-
 import { supabase } from "./supabase.js";
+
+async function getNextLRN(userId) {
+
+  const { data, error } = await supabase
+    .from("report_history")
+    .select("lrn")
+    .eq("user_id", userId)
+    .order("lrn", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    return 1;
+  }
+
+  const maxLRN = data?.lrn || 0;
+
+  return maxLRN + 1;
+}
+
+
+
+let generatedLRN = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return;
+
+  const userId = sessionData.session.user.id;
+
+  // 🔥 CHECK IF OPENED FROM HISTORY
+  const fromHistory = localStorage.getItem("fromHistory");
+
+  if (fromHistory === "1") {
+
+    // ✅ USE OLD PATIENT DATA (DO NOT GENERATE NEW LRN)
+    const savedPatient = JSON.parse(localStorage.getItem("patient"));
+
+    generatedLRN = savedPatient?.lrn || 1;
+
+    patient.lrn = generatedLRN;
+
+    console.log("History preview LRN:", generatedLRN);
+
+    // ✅ clear flag so next new report generates fresh LRN
+    // localStorage.removeItem("fromHistory");
+
+  } else {
+
+    // ✅ NORMAL FLOW → GENERATE NEW LRN
+    generatedLRN = await getNextLRN(userId);
+
+    patient.lrn = generatedLRN;
+
+    console.log("New preview LRN:", generatedLRN);
+
+  }
+
+  renderPreview();
+});
+
+
+
+
+
+
 
 export async function saveReport(patientData, reportData, tests) {
 
   const { data: sessionData } = await supabase.auth.getSession();
 
-  console.log("SESSION:", sessionData);
-
-  if (!sessionData.session) {
-    alert("Session expired. Please login again.");
-    return;
-  }
+  if (!sessionData.session) return;
 
   const userId = sessionData.session.user.id;
 
-  console.log("Saving for user:", userId);
+  // ✅ CRITICAL FIX: ALWAYS FETCH FRESH LRN FROM DB BEFORE INSERT
+  const freshLRN = await getNextLRN(userId);
+
+  // ✅ update global + patient also
+  generatedLRN = freshLRN;
+  patient.lrn = freshLRN;
 
   const { data, error } = await supabase
     .from("report_history")
     .insert({
       user_id: userId,
-      patient: patientData,
+      patient: { ...patientData, lrn: freshLRN },
       report: reportData,
-      tests: tests
-    })
-    .select();
-
-  console.log("Insert response:", data, error);
+      tests: tests,
+      lrn: freshLRN
+    });
 
   if (error) {
-    alert("Insert failed");
-  } else {
-    console.log("Report saved successfully");
+    alert(error.message);
+    return;
   }
+
+  console.log("Saved LRN:", freshLRN);
 }
+
+
+
 
 
 function savePdfHistory(type, userId) {
@@ -756,6 +825,9 @@ let currentPage = null;
 let currentTestsBox = null;
 
 function newPage() {
+
+  console.log("Rendering LRN:", patient.lrn);
+
  currentPage = document.createElement("div");
 currentPage.className = "page";
 currentPage.setAttribute("data-page", "true"); // 🔥 page marker
@@ -779,7 +851,13 @@ content.id = "page-content";
       <div>
         <div class="p-row"><span class="p-label">Age/Sex</span><span class="p-colon">:</span><span class="p-value">${patient.age} / ${patient.gender}</span></div>
         <div class="p-row"><span class="p-label">Date</span><span class="p-colon">:</span><span class="p-value">${formatDateDDMMYY(patient.date)}</span></div>
-        <div class="p-row"><span class="p-label">LRN</span><span class="p-colon">:</span><span class="p-value">${patient.lrn}</span></div>
+        <div class="p-row"><span class="p-label">LRN</span><span class="p-colon">:</span>
+      <span class="p-value">
+ ${patient.lrn ? String(patient.lrn).padStart(2, "0") : "01"}
+
+</span>
+
+</div>
       </div>
     </div>
   `;
@@ -2001,6 +2079,24 @@ else if (
 
 let psForMpKey = null; // 🔥 PS FOR MP ko last ke liye store
 
+// baadme 
+
+function renderPreview() {
+
+  // 🔥 IMPORTANT: clear old preview
+  pdf.innerHTML = "";
+
+  // reset state
+  currentPage = null;
+  currentTestsBox = null;
+  serologyGroup.length = 0;
+  psForMpKey = null;
+
+  /* ================= PAGINATION ================= */
+
+
+
+// yaha tk  
 selectedTests.forEach(testKey => {
 
   const test = Tests[testKey];
@@ -2082,6 +2178,8 @@ document.querySelectorAll(".page").forEach(p => {
   const tests = p.querySelector(".tests");
   if (!tests || tests.children.length === 0) p.remove();
 });
+
+}
 
 
 function downloadColoredPDF() {
@@ -2198,7 +2296,8 @@ window.download = async () => {
 
   if (fromHistory !== "1") {
     // ✅ Only first-time normal generation save hoga
-    await saveReport(patient, report, selectedTests);
+   await saveReport(patient, report, selectedTests);
+
   } else {
     console.log("Opened from history → skip saving");
   }
