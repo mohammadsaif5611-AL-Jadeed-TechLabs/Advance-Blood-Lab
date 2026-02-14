@@ -50,7 +50,7 @@ function renderHistory(data) {
     tr.innerHTML = `
       <td>${formattedDate}</td>
       <td>${row.patient.name}</td>
-      <td>${row.tests.length}</td>
+      <td>${String(row.lrn).padStart(2, "0")}</td>
       <td>
         <button class="btn btn-sm btn-primary"
           onclick="previewReport('${row.id}')">
@@ -72,8 +72,8 @@ function renderHistory(data) {
       <div class="history-header">Patient</div>
       <div class="history-value mb-2">${row.patient.name}</div>
 
-      <div class="history-header">Tests</div>
-      <div class="history-value mb-3">${row.tests.length}</div>
+      <div class="history-header">LRN</div>
+      <div class="history-value mb-3">${String(row.lrn).padStart(2, "0")}</div>
 
       <button class="btn btn-primary btn-block"
         onclick="previewReport('${row.id}')">
@@ -97,16 +97,31 @@ monthFilter.addEventListener("change", () => {
 
 function applyFilters() {
 
-  const searchValue = searchInput.value.toLowerCase();
+  const searchValue = searchInput.value.trim().toLowerCase();
   const monthValue = monthFilter.value;
+
+  const isNumberSearch = /^[0-9]+$/.test(searchValue);
 
   let filtered = allReports.filter(row => {
 
     const patientName = row.patient.name.toLowerCase();
+    const lrnString = String(row.lrn);
     const created = new Date(row.created_at);
 
-    const matchesSearch = patientName.includes(searchValue);
+    /* ✅ SEARCH LOGIC */
+    let matchesSearch = true;
 
+    if (searchValue) {
+      if (isNumberSearch) {
+        // search by LRN
+        matchesSearch = lrnString.includes(searchValue);
+      } else {
+        // search by patient name
+        matchesSearch = patientName.includes(searchValue);
+      }
+    }
+
+    /* ✅ MONTH FILTER */
     let matchesMonth = true;
 
     if (monthValue) {
@@ -122,25 +137,40 @@ function applyFilters() {
   renderHistory(filtered);
 }
 
+
 /* ===== PREVIEW ===== */
 window.previewReport = async (id) => {
-  const { data } = await supabase
+
+  const { data, error } = await supabase
     .from("report_history")
     .select("*")
     .eq("id", id)
     .single();
 
- localStorage.setItem("patient", JSON.stringify(data.patient));
-localStorage.setItem("report", JSON.stringify(data.report));
-localStorage.setItem("tests", JSON.stringify(data.tests));
+  if (error || !data) {
+    alert("Failed to load report");
+    return;
+  }
 
-/* 🔥 IMPORTANT FLAG */
-localStorage.setItem("fromHistory", "1");
+  /* ✅ Ensure patient object contains correct LRN */
+  const patientData = {
+    ...data.patient,
+    lrn: data.lrn
+  };
 
-window.location.href = "preview.html";
+  localStorage.setItem("patient", JSON.stringify(patientData));
+  localStorage.setItem("report", JSON.stringify(data.report));
+  
+  localStorage.setItem("tests", JSON.stringify(data.tests));
 
+  /* ✅ store LRN separately if needed */
+  localStorage.setItem("lrn", JSON.stringify(data.lrn));
+
+  /* 🔥 IMPORTANT FLAG */
+  localStorage.setItem("fromHistory", "1");
+
+  window.location.href = "preview.html";
 };
 
 setCurrentMonth();
 loadHistory();
-
