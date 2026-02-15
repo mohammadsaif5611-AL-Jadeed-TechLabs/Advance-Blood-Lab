@@ -68,18 +68,48 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
 
+// export async function saveReport(patientData, reportData, tests) {
+
+//   const { data: sessionData } = await supabase.auth.getSession();
+
+//   if (!sessionData.session) return;
+
+//   const userId = sessionData.session.user.id;
+
+//   // ✅ CRITICAL FIX: ALWAYS FETCH FRESH LRN FROM DB BEFORE INSERT
+//   const freshLRN = await getNextLRN(userId);
+
+//   // ✅ update global + patient also
+//   generatedLRN = freshLRN;
+//   patient.lrn = freshLRN;
+
+//   const { data, error } = await supabase
+//     .from("report_history")
+//     .insert({
+//       user_id: userId,
+//       patient: { ...patientData, lrn: freshLRN },
+//       report: reportData,
+//       tests: tests,
+//       lrn: freshLRN
+//     });
+
+//   if (error) {
+//     alert(error.message);
+//     return;
+//   }
+
+//   console.log("Saved LRN:", freshLRN);
+// }
+
 export async function saveReport(patientData, reportData, tests) {
 
   const { data: sessionData } = await supabase.auth.getSession();
-
-  if (!sessionData.session) return;
+  if (!sessionData.session) return { success: false };
 
   const userId = sessionData.session.user.id;
 
-  // ✅ CRITICAL FIX: ALWAYS FETCH FRESH LRN FROM DB BEFORE INSERT
   const freshLRN = await getNextLRN(userId);
 
-  // ✅ update global + patient also
   generatedLRN = freshLRN;
   patient.lrn = freshLRN;
 
@@ -91,16 +121,21 @@ export async function saveReport(patientData, reportData, tests) {
       report: reportData,
       tests: tests,
       lrn: freshLRN
-    });
+    })
+    .select(); // 🔥 ADD THIS (important for confirmation)
 
   if (error) {
     alert(error.message);
-    return;
+    return { success: false };
   }
 
-  console.log("Saved LRN:", freshLRN);
-}
+  if (data && data.length > 0) {
+    console.log("Saved LRN:", freshLRN);
+    return { success: true, lrn: freshLRN };
+  }
 
+  return { success: false };
+}
 
 
 
@@ -2185,89 +2220,58 @@ document.querySelectorAll(".page").forEach(p => {
 function downloadColoredPDF() {
   pdf.classList.remove("plain-mode");
 
-  html2pdf()
+  return html2pdf()
     .from(pdf)
     .set({
       margin: 0,
       filename: `${patient.name}_COLORED.pdf`,
-      // jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
       jsPDF: {
-  unit: "mm",
-  format: "a4",
-  orientation: "portrait"
-},
-
-      // html2canvas: {
-      //   scale: 2,
-      //   useCORS: true,
-      //   backgroundColor: "#ffffff",
-      //   scrollY: 0
-      // },
-//       html2canvas: {
-//   scale: 3,
-//   useCORS: true,
-//   backgroundColor: "#ffffff",
-//   scrollY: 0,
-//   imageTimeout: 15000
-// },
-html2canvas: {
-  scale: 4,
-  useCORS: true,
-  backgroundColor: "#ffffff",
-  scrollY: 0,
-  imageTimeout: 20000,
-  letterRendering: true
-}
-
-
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait"
+      },
+      html2canvas: {
+        scale: 4,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        scrollY: 0,
+        imageTimeout: 20000,
+        letterRendering: true
+      }
     })
     .save()
-     .then(() => {
-      savePdfHistory("COLORED"); // 🔥 ADD THIS
+    .then(() => {
+      savePdfHistory("COLORED");
     });
 }
+
 
 function downloadPlainPDF() {
   pdf.classList.add("plain-mode");
 
-  html2pdf()
+  return html2pdf()
     .from(pdf)
     .set({
       margin: 0,
       filename: `${patient.name}_PLAIN.pdf`,
-      // jsPDF: { unit: "mm", format: [243, 320], orientation: "portrait" },
-          jsPDF: {
-  unit: "mm",
-  format: "a4",
-  orientation: "portrait"
-},
-      // html2canvas: {
-      //   scale: 2,
-      //   useCORS: true,
-      //   backgroundColor: "#ffffff",
-      //   scrollY: 0
-      // },
-//       html2canvas: {
-//   scale: 3,
-//   useCORS: true,
-//   backgroundColor: "#ffffff",
-//   scrollY: 0,
-//   imageTimeout: 15000
-// },
-html2canvas: {
-  scale: 4,
-  useCORS: true,
-  backgroundColor: "#ffffff",
-  scrollY: 0,
-  imageTimeout: 20000,
-  letterRendering: true
-}
-
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait"
+      },
+      html2canvas: {
+        scale: 4,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        scrollY: 0,
+        imageTimeout: 20000,
+        letterRendering: true
+      }
     })
     .save()
     .then(() => {
       savePdfHistory("PLAIN");
-      pdf.classList.remove("plain-mode"); // reset back
+      pdf.classList.remove("plain-mode");
     });
 }
 
@@ -2292,27 +2296,59 @@ window.download = async () => {
     return;
   }
 
+  const userId = sessionData.session.user.id;
   const fromHistory = localStorage.getItem("fromHistory");
 
-  if (fromHistory !== "1") {
-    // ✅ Only first-time normal generation save hoga
-   await saveReport(patient, report, selectedTests);
+  /* ================= NEW REPORT FLOW ================= */
 
-  } else {
+  if (fromHistory !== "1") {
+
+    const result = await saveReport(patient, report, selectedTests);
+
+    if (!result || !result.success) {
+      alert("❌ Report save failed. PDF cancelled.");
+      return;
+    }
+
+    // 🔥 DIRECT DATABASE VERIFICATION
+    const { data: verifyData, error } = await supabase
+      .from("report_history")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("lrn", result.lrn)
+      .maybeSingle();
+
+    if (error || !verifyData) {
+      alert("❌ Database verification failed.");
+      return;
+    }
+
+    alert("✅ Report successfully saved in database (LRN: " + result.lrn + ")");
+  }
+  else {
     console.log("Opened from history → skip saving");
   }
 
-  // PDF download allowed in both cases
-  downloadColoredPDF();
+  /* ================= PDF DOWNLOAD ================= */
 
-  setTimeout(() => {
-    downloadPlainPDF();
-  }, 600);
+  try {
+    await downloadColoredPDF();
+    alert("🟢 Colored PDF downloaded successfully");
+  } catch (e) {
+    alert("❌ Colored PDF download failed");
+    return;
+  }
 
-  // 🔥 IMPORTANT: remove AFTER download click
+  try {
+    await downloadPlainPDF();
+    alert("⚪ Plain PDF downloaded successfully");
+  } catch (e) {
+    alert("❌ Plain PDF download failed");
+    return;
+  }
+
   localStorage.removeItem("fromHistory");
 };
-
 
 
 
