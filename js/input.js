@@ -192,6 +192,20 @@ const isESR = test =>
   //HEMATOLOGYESR
 const isHBA = test =>
   String(test.key || "").toUpperCase() === "HBA";
+
+const isIRON = test =>
+  String(test.key || "").toUpperCase() === "IRON";
+
+const isCALPHOS = test =>
+  String(test.key || "").toUpperCase() === "CALCIUM_PHOS";
+
+const isVITD = test =>
+  String(test.key || "").toUpperCase() === "VITD";
+
+const isTHYROID2 = test =>
+  String(test.key || "").toUpperCase() === "THYROID2";
+
+
   //HEMATOLOGYESR
 const isSRCAL = test =>
   String(test.key || "").toUpperCase() === "SRCAL";
@@ -428,6 +442,117 @@ else if (isHBA(test)) {
 
   html += `</div>`;
 }
+
+// ====================== IRON PROFILE TEST ======================
+else if (isIRON(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (agar future me add karo)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return;
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+/* ================= CALCIUM & PHOSPHORUS ================= */
+else if (isCALPHOS(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+
+
+
+/* ================= VITD ================= */
+else if (isVITD(test)) {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.subtitle}</h5>
+    <div class="grid">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+
+
+/* ================= THYROID 2 ================= */
+else if (isTHYROID2(test)) {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.subtitle}</h5>
+    <div class="grid">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+
 // ====================== SERUM CALCIUM ======================
 else if (isSRCAL(test)) {
 
