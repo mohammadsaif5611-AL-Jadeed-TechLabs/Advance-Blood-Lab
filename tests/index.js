@@ -11,6 +11,10 @@ import LIPID from "./LIPID.js";
 import SRCAL from "./SERUM_CAL.js";
 
 import HBA from "./HBA1C.js";
+import IRON from "./IRON.js";
+import CAL$PHOS from "./CAL$PHOS.js";
+import VITD from "./VITD.js";
+import THYROID from "./THYROID.js";
 
 // SEROLOGY --
 import CRP from "./CRP_SEROLOGY.js";
@@ -32,7 +36,13 @@ export default {
   COAGU,
   LIPID,
   SRCAL,
+
   HBA,
+  IRON,
+  CAL$PHOS,
+  VITD,
+  THYROID,
+
   CRP,
   SEROLOGY,
 
