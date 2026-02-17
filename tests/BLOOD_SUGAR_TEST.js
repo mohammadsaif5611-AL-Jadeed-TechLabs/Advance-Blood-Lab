@@ -30,7 +30,7 @@ export default {
     {
       name: "BLOOD SUGAR POSTMEAL",
       unit: "mg/dl",
-      ref: "70 - 160",
+      ref: "70 - 140",
       type: "decimal"
     },
      {
@@ -47,3 +47,4 @@ export default {
     }
   ]
 };
+
