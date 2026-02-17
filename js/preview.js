@@ -678,7 +678,8 @@ if (combinedTableOpen) {
 
 import Tests from "../tests/index.js";
 
-function checkFlag(result, refList, gender) {
+function checkFlag(result, refList, gender, age)
+ {
   if (!result || !refList || refList.length === 0) {
     return { flag: "" };
   }
@@ -686,8 +687,88 @@ function checkFlag(result, refList, gender) {
   const value = parseFloat(String(result).replace(/,/g, ""));
   if (isNaN(value)) return { flag: "" };
 
-  /* 🔥 ref ko jaisa aaye waisa hi combine */
+    /* 🔥 ref ko jaisa aaye waisa hi combine */
   let ref = refList.join(" | ").trim();
+
+  /* ===================================================
+   🔥 STEP X: AGE BASED RANGE SELECTOR
+=================================================== */
+
+const ageNum = parseInt(age);
+
+/* ===============================================
+   🔥 NEW FORMAT: 80 - 253 : 1 Yr - 10 Yr
+================================================ */
+
+if (!isNaN(ageNum) && /:\s*\d+\s*Yr/i.test(ref)) {
+
+  const lines = ref.split("\n").map(l => l.trim());
+
+  for (let line of lines) {
+
+    // 80 - 253 : 1 Yr - 10 Yr
+    let match = line.match(/([\d.]+\s*-\s*[\d.]+)\s*:\s*(\d+)\s*Yr\s*-\s*(\d+)\s*Yr/i);
+    if (match) {
+      const range = match[1];
+      const minAge = parseInt(match[2]);
+      const maxAge = parseInt(match[3]);
+
+      if (ageNum >= minAge && ageNum <= maxAge) {
+        ref = range.trim();
+        break;
+      }
+    }
+
+    // 60 - 181 : > 18 years
+    match = line.match(/([\d.]+\s*-\s*[\d.]+)\s*:\s*>\s*(\d+)/i);
+    if (match) {
+      const range = match[1];
+      const minAge = parseInt(match[2]);
+
+      if (ageNum > minAge) {
+        ref = range.trim();
+        break;
+      }
+    }
+  }
+}
+
+
+if (!isNaN(ageNum) && /\d+\s*-\s*\d+\s*Years/i.test(ref)) {
+
+  const lines = ref.split("\n").map(l => l.trim());
+
+  for (let line of lines) {
+
+    // 4 - 11 Years: 8.6 - 37.7
+    let match = line.match(/(\d+)\s*-\s*(\d+)\s*Years\s*:\s*(.+)/i);
+    if (match) {
+      const minAge = parseInt(match[1]);
+      const maxAge = parseInt(match[2]);
+      const range = match[3];
+
+      if (ageNum >= minAge && ageNum <= maxAge) {
+        ref = range.trim();
+        break;
+      }
+    }
+
+    // >60 Years: 5.6 - 45.8
+    match = line.match(/>\s*(\d+)\s*Years\s*:\s*(.+)/i);
+    if (match) {
+      const minAge = parseInt(match[1]);
+      const range = match[2];
+
+      if (ageNum > minAge) {
+        ref = range.trim();
+        break;
+      }
+    }
+  }
+}
+
+
+
 
   /* ===================================================
      🔥 STEP 1: NORMALIZE GENDER
@@ -1537,6 +1618,253 @@ else if (test.class === "GHb/HBA1c") {
   }
 }
 
+/* ================= IRON PROFILE ================= */
+else if (test.class === "IRON PROFILE") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key || f.name);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* ===== TITLE ===== */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+  /* ===== TABLE HEAD ===== */
+  html += `
+    <tr class="test-head">
+      <th>TEST DESCRIPTION</th>
+      <th>RESULT</th>
+      <th>UNITS</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+
+  /* ===== SUBTITLE ===== */
+  if (test.subtitle) {
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="4">${test.subtitle}</th>
+      </tr>
+    `;
+  }
+
+ 
+/* ===== FIELDS (FROM iron.js) ===== */
+test.fields.forEach(f => {
+
+  const key = makeKey(testKey, f.key || f.name);
+  const result = report[key];
+  if (!result) return;
+
+  let flagHTML = "";
+  let rowClass = "";
+
+  if (f.ref) {
+    const { flag } = checkFlag(result, [f.ref]);
+    if (flag) {
+      flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+      rowClass = "abnormal-value";
+    }
+  }
+
+  /* ===== MAIN RESULT ROW ===== */
+  html += `
+    <tr class="test-row">
+      <td>${f.name}</td>
+      <td class="td-result ${rowClass}">
+        <span class="result-value">${result}</span>
+        ${flagHTML}
+      </td>
+      <td>${f.unit || ""}</td>
+      <td class="td-ref">${f.ref || ""}</td>
+    </tr>
+  `;
+
+  /* ===== METHOD ROW (Separate, Clean) ===== */
+  if (f.method) {
+    html += `
+      <tr class="method-row">
+        <td colspan="4" style="padding:2px 6px; font-size:12px; color:#555;">
+          ${f.method}
+        </td>
+      </tr>
+    `;
+  }
+
+});
+
+
+
+ /* ===== AFTER SECTION (Proper Single Table) ===== */
+if (Array.isArray(test.after) && test.after.length) {
+
+  const headerIndex = test.after.findIndex(line =>
+    line.includes("Disease |")
+  );
+
+  html += `
+    <tr>
+      <td colspan="4" style="padding-top:6px">
+  `;
+
+  test.after.forEach((line, index) => {
+
+    // Plain text lines (Interpretation etc.)
+    if (!line.includes("|")) {
+      html += `
+        <div style="line-height:1.4; padding-top:4px;">
+          ${line}
+        </div>
+      `;
+    }
+
+    // Header line -> start table
+    if (index === headerIndex) {
+
+      const headers = line.split("|").map(c => c.trim());
+
+      html += `
+        <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:6px;">
+          <tr style="background:#f2f2f2; font-weight:bold;">
+            ${headers.map(h =>
+              `<th style="border:1px solid #000; padding:4px;">${h}</th>`
+            ).join("")}
+          </tr>
+      `;
+    }
+
+    // Data rows (after header)
+    if (index > headerIndex && line.includes("|")) {
+
+      const cols = line.split("|").map(c => c.trim());
+
+      html += `
+        <tr>
+          ${cols.map(c =>
+            `<td style="border:1px solid #000; padding:4px;">${c}</td>`
+          ).join("")}
+        </tr>
+      `;
+    }
+
+  });
+
+  // Close table
+  if (headerIndex !== -1) {
+    html += `</table>`;
+  }
+
+  html += `
+      </td>
+    </tr>
+  `;
+}
+
+}
+
+/* ================= CALCIUM & PHOSPHORUS ================= */
+else if (test.class === "CALCIUM & PHOSPHORUS") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* ===== TITLE ===== */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+  /* ===== TABLE HEAD ===== */
+  html += `
+    <tr class="test-head">
+      <th>TEST DESCRIPTION</th>
+      <th>RESULT</th>
+      <th>UNITS</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+
+  /* ===== SUBTITLE ===== */
+  html += `
+    <tr class="bio-subtitle">
+      <th colspan="4">${test.subtitle}</th>
+    </tr>
+  `;
+
+  /* ===== FIELDS ===== */
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(result, [f.ref]);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    /* Main Row */
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td>${f.unit}</td>
+        <td>${f.ref}</td>
+      </tr>
+    `;
+
+    /* Method Row */
+    html += `
+      <tr class="method-row">
+        <td colspan="4" style="font-size:12px; padding:2px 6px; color:#555;">
+          ${f.method}
+        </td>
+      </tr>
+    `;
+  });
+
+  /* ===== INTERPRETATION ===== */
+  if (Array.isArray(test.after) && test.after.length) {
+
+    html += `
+      <tr>
+        <td colspan="4" style="padding-top:8px;">
+    `;
+
+    test.after.forEach(line => {
+      html += `
+        <div style="line-height:1.5; margin-bottom:4px;font-size:13.5px;">
+          ${line}
+        </div>
+      `;
+    });
+
+    html += `
+        </td>
+      </tr>
+    `;
+  }
+}
+
+
 /* ================= SERUM CALCIUM ================= */
 /* ================= SERUM CALCIUM ================= */
 else if (test.class === "SERUM CALCIUM") {
@@ -1605,6 +1933,275 @@ else if (test.class === "SERUM CALCIUM") {
   });
 }
 
+/* ================= VITAMIN D PROFILE ================= */
+else if (test.key === "VITD") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* ===== TITLE ===== */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+  /* ===== TABLE HEAD ===== */
+  html += `
+    <tr class="test-head">
+      <th>TEST DESCRIPTION</th>
+      <th>RESULT</th>
+      <th>UNITS</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+
+  /* ===== SUBTITLE ===== */
+  html += `
+    <tr class="bio-subtitle">
+      <th colspan="4">${test.subtitle}</th>
+    </tr>
+  `;
+
+  /* ===== MAIN TEST ROWS ===== */
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+   if (f.ref && f.ref !== "Refer Interpretation") {
+
+  const { flag } = checkFlag(
+    result,
+    [f.ref],
+    patient.gender,
+    patient.age
+  );
+
+  if (flag) {
+    flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+    rowClass = "abnormal-value";
+  }
+}
+
+
+    /* MAIN ROW */
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td>${f.unit || ""}</td>
+        <td style="white-space: pre-line;">${f.ref || ""}</td>
+      </tr>
+    `;
+
+    /* METHOD ROW */
+    if (f.method) {
+      html += `
+        <tr class="method-row">
+          <td colspan="4" style="font-size:12px; padding:2px 6px; color:#555;">
+            (${f.method})
+          </td>
+        </tr>
+      `;
+    }
+
+  });
+
+  /* ================= INTERPRETATION TABLE ================= */
+
+  if (Array.isArray(test.interpretationTable)) {
+
+    html += `
+      <tr>
+        <td colspan="4" style="padding-top:10px;">
+          <b>Interpretation :</b>
+          <table style="width:100%; border-collapse:collapse; margin-top:5px;">
+            <tr style="border:1px solid #000; padding:5px; font-size: 12px;">
+              <th style="border:1px solid #000; padding:5px;">LEVEL</th>
+              <th style="border:1px solid #000; padding:5px;">REFERENCE RANGE</th>
+            </tr>
+    `;
+
+    test.interpretationTable.forEach(row => {
+      html += `
+        <tr>
+          <td style="border:1px solid #000; padding:5px; font-size: 12px;">
+            ${row.level}
+          </td>
+          <td style="border:1px solid #000; padding:5px;  font-size: 12px;">
+            ${row.range}
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `
+          </table>
+        </td>
+      </tr>
+    `;
+  }
+
+  /* ================= DECREASED LEVELS ================= */
+
+  if (Array.isArray(test.decreasedLevels)) {
+    html += `
+      <tr>
+        <td colspan="4" style="padding-top:8px; font-size:10.5px; font-weight: 300;">
+          <b>DECREASED LEVELS:</b><br>
+          ${test.decreasedLevels.map(i => `- ${i}`).join("<br>")}
+        </td>
+      </tr>
+    `;
+  }
+
+  /* ================= INCREASED LEVELS ================= */
+
+  if (Array.isArray(test.increasedLevels)) {
+    html += `
+      <tr>
+        <td colspan="4" style="padding-top:6px; font-size:10px; font-weight: 300;">
+          <b>INCREASED LEVELS:</b><br>
+          ${test.increasedLevels.map(i => `- ${i}`).join("<br>")}
+        </td>
+      </tr>
+    `;
+  }
+
+  /* ================= COMMENTS ================= */
+
+  if (Array.isArray(test.comments)) {
+    html += `
+      <tr>
+        <td colspan="4" style="padding-top:6px; font-size:10.5px; font-weight: 300;
+}">
+          <b>COMMENTS:</b><br>
+          ${test.comments.map(i => `- ${i}`).join("<br>")}
+        </td>
+      </tr>
+    `;
+  }
+}
+
+/* ================= THYROID PROFILE-II ================= */
+else if (test.key === "THYROID2") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* TITLE */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+  /* HEAD */
+  html += `
+    <tr class="test-head">
+      <th>TEST DESCRIPTION</th>
+      <th>RESULT</th>
+      <th>UNITS</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+
+  /* SUBTITLE */
+  html += `
+    <tr class="bio-subtitle">
+      <th colspan="4">${test.subtitle}</th>
+    </tr>
+  `;
+
+  /* FIELDS */
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.key);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+      const { flag } = checkFlag(
+        result,
+        [f.ref],
+        patient.gender,
+        patient.age
+      );
+
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td style="vertical-align: top !important;" >${f.name}</td>
+        <td class="td-result ${rowClass}" style="vertical-align: top !important;" >
+          ${result} ${flagHTML}
+        </td>
+        <td style="vertical-align: top !important;" >${f.unit}</td>
+        <td style="white-space:pre-line;">${f.ref}</td>
+      </tr>
+    `;
+
+    if (f.method) {
+      html += `
+        <tr class="method-row">
+          <td colspan="4" style="font-size:12px; color:#555;">
+            (${f.method})
+          </td>
+        </tr>
+      `;
+    }
+
+  });
+
+  /* ================= INTERPRETATION ================= */
+
+  const i = test.interpretation;
+
+  html += `
+    <tr>
+      <td colspan="4" style="padding-top:10px; font-size:12px;">
+        <b>Interpretation:</b><br><br>
+
+        <b>Important Note:</b><br>
+        ${i.importantNote.map(x => x + "<br>").join("")}
+        <br>
+
+        <b>Diurnal Variability:</b> ${i.diurnal}
+        <br><br>
+
+        <b>Limitations:</b><br>
+        ${i.limitations.map(x => "• " + x + "<br>").join("")}
+        <br>
+
+        <b>Please Note:</b> ${i.note}
+        <br><br>
+
+        <b>Associated tests:</b> ${i.associated}
+      </td>
+    </tr>
+  `;
+}
 
 
 /* ================= SEROLOGY : CRP & RA TEST ================= */
