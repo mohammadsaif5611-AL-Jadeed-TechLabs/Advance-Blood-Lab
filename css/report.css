@@ -181,8 +181,8 @@ body {
   z-index: 1;
 
   padding-top: 51mm;     /* top image */
-  padding-left: 13mm;
-  padding-right: 13mm;
+  padding-left: 20mm;
+  padding-right: 20mm;
   padding-bottom: 68mm;  /* bottom image */
 
   height: 100%;
@@ -591,5 +591,6 @@ table {
       font-size: 12px;
     color: #434343;
 }
+
 
 
