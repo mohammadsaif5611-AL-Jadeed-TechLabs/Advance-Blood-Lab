@@ -72,6 +72,76 @@ document.addEventListener("input", function(e) {
 
 });
 
+
+window.autoCalculateCoagulation = function (testKey) {
+
+  const getVal = (label) => {
+    const el = document.getElementById(makeKey(testKey, label));
+    if (!el) return NaN;
+    return parseFloat(el.value.replace(/,/g, ""));
+  };
+
+  const setVal = (label, value) => {
+    const el = document.getElementById(makeKey(testKey, label));
+    if (el) el.value = value;
+  };
+
+  const ptPatient = getVal("Patient Value (PT)");
+  const ptControl = getVal("Control Value (CT)");
+  const isi = getVal("I.S.I. Value");
+
+  const apttPatient = getVal("aPTT Patient Value");
+  const apttControl = getVal("aPTT Control Value");
+
+  // Clear outputs
+  setVal("Prothrombin Ratio", "");
+  setVal("International Normalised Ratio (INR)", "");
+  setVal("Prothrombin Index", "");
+  setVal("aPTT Ratio", "");
+
+  // ================= PT SECTION =================
+  if (!isNaN(ptPatient) && !isNaN(ptControl) && ptControl > 0) {
+
+    // PT Ratio
+    const ptRatio = ptPatient / ptControl;
+    setVal("Prothrombin Ratio", ptRatio.toFixed(2));
+
+    // INR
+    if (!isNaN(isi) && isi > 0) {
+      const inr = Math.pow(ptRatio, isi);
+      setVal("International Normalised Ratio (INR)", inr.toFixed(2));
+    }
+
+    // Prothrombin Index
+    if (ptPatient > 0) {
+      const pi = (ptControl / ptPatient) * 100;
+      setVal("Prothrombin Index", pi.toFixed(2));
+    }
+  }
+
+  // ================= aPTT SECTION =================
+  if (!isNaN(apttPatient) && !isNaN(apttControl) && apttControl > 0) {
+    const apttRatio = apttPatient / apttControl;
+    setVal("aPTT Ratio", apttRatio.toFixed(2));
+  }
+};
+
+document.addEventListener("input", function (e) {
+
+  const id = e.target.id?.toLowerCase();
+
+  if (
+    id?.includes("patient_value_pt") ||
+    id?.includes("control_value_ct") ||
+    id?.includes("i_s_i_value") ||
+    id?.includes("aptt_patient_value") ||
+    id?.includes("aptt_control_value")
+  ) {
+    window.autoCalculateCoagulation();
+  }
+
+});
+
 // function makeKey(testKey, name) {
 //   return `${testKey}_${name}`
 //     .replace(/[^\w]/g, "_")
@@ -687,32 +757,52 @@ else if (isCOAGU(test)) {
 
   test.fields.forEach(f => {
 
-    // ✅ SUB HEADING (ELECTROLYTES)
     if (f.sub) {
       html += `
         <div class="full-row sub-heading">
           ${f.sub}
         </div>
       `;
-      return; // 🔥 important: input mat banao
+      return;
     }
 
     const key = makeKey(testKey, f.name);
+    const lname = f.name.toLowerCase();
+
+    const isTrigger =
+      lname.includes("patient value (pt)") ||
+      lname.includes("control value (ct)") ||
+      lname.includes("i.s.i") ||
+      lname.includes("aptt patient") ||
+      lname.includes("aptt control");
+
+    const isOutput =
+      lname.includes("prothrombin index") ||
+      lname.includes("prothrombin ratio") ||
+      lname.includes("international normalised ratio") ||
+      lname.includes("aptt ratio");
+
+    const isPlatelet =
+      lname.includes("platelet");
 
     html += `
       <label>${f.name}</label>
       <input
         type="text"
-        class="input full-row lft-input"
+        class="input full-row ${isOutput ? "auto-field" : ""}"
         id="${key}"
-        inputmode="decimal"
+        inputmode="${isPlatelet ? "numeric" : "decimal"}"
+        ${isOutput ? "readonly" : ""}
+        oninput="
+          ${isPlatelet ? "onlyIntWithComma(this);" : "onlyFloatDot(this);"}
+          ${isTrigger ? `autoCalculateCoagulation('${testKey}');` : ""}
+        "
       />
     `;
   });
 
   html += `</div>`;
 }
-
    
    // ====================== SEROLOGY : ALL TEST (FORM) ===============
    // ====================== SEROLOGY : MULTI CHECKBOX FORM =========
