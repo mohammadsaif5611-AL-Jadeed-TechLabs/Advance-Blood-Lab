@@ -7,7 +7,70 @@ function makeKey(testKey, name) {
     .toUpperCase();
 }
 
+window.autoCalculateBasophils = function () {
 
+  const dlcInputs = document.querySelectorAll(".dlc-input");
+
+  let total = 0;
+
+  dlcInputs.forEach(input => {
+    total += parseFloat(input.value) || 0;
+  });
+
+  const basoInput = document.querySelector(".baso-input");
+  if (!basoInput) return;
+
+  const baso = 100 - total;
+
+  basoInput.value = baso === 0 ? "00" : baso;
+};
+
+window.autoCalculateRBCIndices = function () {
+
+  let hb = 0, hct = 0, rbc = 0;
+  let mcvInput = null;
+  let mchInput = null;
+  let mchcInput = null;
+
+  document.querySelectorAll("input").forEach(input => {
+
+    const id = input.id.toLowerCase();
+
+    if (id.includes("haemoglobin")) hb = parseFloat(input.value) || 0;
+    if (id.includes("hct")) hct = parseFloat(input.value) || 0;
+    if (id.includes("rbc")) rbc = parseFloat(input.value) || 0;
+
+    // 🔥 EXACT MATCH
+    if (id.endsWith("mcv")) mcvInput = input;
+    if (id.endsWith("mch")) mchInput = input;
+    if (id.endsWith("mchc")) mchcInput = input;
+  });
+
+  if (hb > 0 && hct > 0 && rbc > 0) {
+
+    const mcv  = (hct * 10) / rbc;
+    const mch  = (hb * 10) / rbc;
+    const mchc = (hb * 100) / hct;
+
+    if (mcvInput)  mcvInput.value  = mcv.toFixed(2);
+    if (mchInput)  mchInput.value  = mch.toFixed(2);
+    if (mchcInput) mchcInput.value = mchc.toFixed(2);
+  }
+};
+
+document.addEventListener("input", function(e) {
+
+  const id = e.target.id?.toLowerCase();
+
+  if (
+    id?.includes("haemoglobin") ||
+    id?.includes("hct") ||
+    id?.includes("rbc")
+  ) {
+    window.autoCalculateRBCIndices();
+  }
+
+});
 
 // function makeKey(testKey, name) {
 //   return `${testKey}_${name}`
@@ -60,7 +123,7 @@ function renderSerologyFields(fields = [], subtitles = []) {
     `;
   });
 }
-
+console.log(document.querySelectorAll(".dlc-input"))
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -833,14 +896,36 @@ else if (test.fields && !isCRP(test)) {
     `;
   }
 
-  return `
-    <label>${fieldName}</label>
-    <input type="text"
-           class="input full-row"
-           id="${key}"
-           inputmode="decimal"
-           oninput="onlyFloatDot(this)">
-  `;
+const isBasophil = lname.includes("basophil");
+const isDLC =
+  lname.includes("neutro") ||
+  lname.includes("lymph") ||
+  lname.includes("eosino") ||
+  lname.includes("mono");
+
+ const isRBCTrigger =
+  lname.includes("haemoglobin") ||
+  lname.includes("hct") ||
+  lname.includes("rbc");
+
+const isRBCIndex =
+  lname === "mcv" ||
+  lname === "mch" ||
+  lname === "mchc";
+
+return `
+  <label>${fieldName}</label>
+  <input type="text"
+         class="input full-row ${isDLC ? "dlc-input" : ""} ${isBasophil ? "baso-input" : ""}"
+         id="${key}"
+         inputmode="decimal"
+         ${(isBasophil || isRBCIndex) ? "readonly" : ""}
+         oninput="
+           onlyFloatDot(this);
+           ${isDLC ? "autoCalculateBasophils();" : ""}
+           ${isRBCTrigger ? "autoCalculateRBCIndices();" : ""}
+         ">
+`;
 }
 
 
