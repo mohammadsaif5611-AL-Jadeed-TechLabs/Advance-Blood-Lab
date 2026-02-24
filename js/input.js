@@ -1006,7 +1006,10 @@ const isRBCIndex =
 return `
   <label>${fieldName}</label>
   <input type="text"
-         class="input full-row ${isDLC ? "dlc-input" : ""} ${isBasophil ? "baso-input" : ""}"
+        class="input full-row 
+${isDLC ? "dlc-input" : ""} 
+${isBasophil ? "auto-field baso-input" : ""} 
+${isRBCIndex ? "auto-field" : ""}"
          id="${key}"
          inputmode="decimal"
          ${(isBasophil || isRBCIndex) ? "readonly" : ""}
