@@ -2935,7 +2935,7 @@ window.download = async () => {
     alert("❌ Colored PDF download failed");
     return;
   }
-
+// test 
   try {
     await downloadPlainPDF();
     alert("⚪ Plain PDF downloaded successfully");
