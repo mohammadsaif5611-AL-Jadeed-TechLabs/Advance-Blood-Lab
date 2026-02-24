@@ -1047,6 +1047,8 @@ function renderTest(testKey) {
 
       const result = report[fieldKey] || "";
 
+      if (!result) return;
+
      let flagHTML = "";
 let rowClass = "";
 
@@ -2935,7 +2937,7 @@ window.download = async () => {
     alert("❌ Colored PDF download failed");
     return;
   }
-// test 
+
   try {
     await downloadPlainPDF();
     alert("⚪ Plain PDF downloaded successfully");
