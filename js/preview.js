@@ -1423,50 +1423,65 @@ const hasPROTHROMBINeValue = PROTHROMBINFields.some(name => {
   return report[k] && report[k] !== "";
 });
 
-  test.fields.forEach(f => {
+for (let i = 0; i < test.fields.length; i++) {
+  const f = test.fields[i];
 
+  // ===== SUB HEADING =====
   if (f.sub) {
-  if (!hasPROTHROMBINeValue) return;
 
-  html += `
-    <tr class="bio-sub-row">
-      <td colspan="4" class="bio-sub-left" style="font-weight:700;">
-        ${f.sub}
-      </td>
-    </tr>
-  `;
-  return;
-}
+    // 🔥 Check next fields until next sub heading
+    let hasSubValue = false;
 
+    for (let j = i + 1; j < test.fields.length; j++) {
+      if (test.fields[j].sub) break;
 
-
-    const key = makeKey(testKey, f.name);
-    const result = report[key];
-    if (!result) return;
-
-    let flagHTML = "";
-    let rowClass = "";
-
-    if (f.ref) {
-      const { flag } = checkFlag(result, [f.ref], patient.gender);
-      if (flag) {
-        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
-        rowClass = "abnormal-value";
+      const k = makeKey(testKey, test.fields[j].name);
+      if (report[k]) {
+        hasSubValue = true;
+        break;
       }
     }
 
+    if (!hasSubValue) continue;
+
     html += `
-      <tr class="test-row">
-        <td>${f.name}</td>
-        <td class="td-result ${rowClass}">
-          <span class="result-value">${result}</span>
-          ${flagHTML}
+      <tr class="bio-sub-row">
+        <td colspan="4" class="bio-sub-left" style="font-weight:700;">
+          ${f.sub}
         </td>
-        <td class="td-unit">${f.unit}</td>
-        <td class="td-ref">${f.ref}</td>
       </tr>
     `;
-  });
+    continue;
+  }
+
+  // ===== NORMAL FIELD =====
+  const key = makeKey(testKey, f.name);
+  const result = report[key];
+  if (!result) continue;
+
+  let flagHTML = "";
+  let rowClass = "";
+
+  if (f.ref) {
+    const { flag } = checkFlag(result, [f.ref], patient.gender);
+    if (flag) {
+      flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+      rowClass = "abnormal-value";
+    }
+  }
+
+  html += `
+    <tr class="test-row">
+      <td>${f.name}</td>
+      <td class="td-result ${rowClass}">
+        <span class="result-value">${result}</span>
+        ${flagHTML}
+      </td>
+      <td class="td-unit">${f.unit}</td>
+      <td class="td-ref">${f.ref}</td>
+    </tr>
+  `;
+};
 }
 /* ================= HEMATOLOGY : ESR ================= */
 else if (test.class === "HEMATOLOGYESR") {
