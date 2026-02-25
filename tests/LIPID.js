@@ -40,6 +40,16 @@ export default {
       name: "LDL / HDL RATIO",
       unit: "",
       ref: "M - < 3.55, F - < 3.22"
+    },
+    {
+      name: "TRIGLYCERIDE / HDL RATIO",
+      unit: "",
+      ref: "0 - 3.5"
+    },
+    {
+      name: "NON HDL CHOLESTEROL",
+      unit: "mg/dl",
+      ref: "Goal < 130 (High Risk > 130)"
     }
   ]
 };
