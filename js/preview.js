@@ -855,7 +855,22 @@ if (!isNaN(ageNum) && /\d+\s*-\s*\d+\s*Years/i.test(ref)) {
     return { flag: "" };
   }
 
+  /* ===================================================
+     🔥 LIPID SPECIAL: Goal < 130 (High Risk > 130)
+  =================================================== */
 
+  if (/goal\s*</i.test(ref) && /high\s*risk\s*>/i.test(ref)) {
+
+    // Goal < 130
+    let goalMatch = ref.match(/<\s*([\d.]+)/);
+    if (goalMatch) {
+      const max = parseFloat(goalMatch[1]);
+      if (value >= max) {
+        return { flag: "H" };  // High risk
+      }
+      return { flag: "" };
+    }
+  }
   /* ================= RANGE: min - max ================= */
   let match = ref.match(/(\d+[\d.]*)\s*-\s*(\d+[\d.]*)/);
   if (match) {
@@ -1274,7 +1289,7 @@ else if (test.class === "LIPID REPORT") {
     let rowClass = "";
 
     if (f.ref) {
-      const { flag } = checkFlag(result, [f.ref], patient.gender);
+     const { flag } = checkFlag(result, [f.ref], patient.gender, patient.age);
       if (flag) {
         flagHTML = `<span class="flag shift-flag">${flag}</span>`;
         rowClass = "abnormal-value";
