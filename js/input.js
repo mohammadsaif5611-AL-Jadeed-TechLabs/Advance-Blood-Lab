@@ -142,6 +142,157 @@ document.addEventListener("input", function (e) {
 
 });
 
+
+window.autoCalculateLFT = function (testKey) {
+
+  const get = (name) => {
+    const id = makeKey(testKey, name);
+    return document.getElementById(id); // 🔥 Important change
+  };
+
+  const totalBilEl = get("SERUM BILIRUBIN TOTAL");
+  const directBilEl = get("DIRECT");
+  const indirectEl = get("INDIRECT");
+
+  const totalProteinEl = get("SERUM PROTEINS TOTAL");
+  const albuminEl = get("ALBUMIN");
+  const globulinEl = get("GLOBULIN");
+  const agRatioEl = get("AG RATIO");
+
+  const totalBil = parseFloat(totalBilEl?.value);
+  const directBil = parseFloat(directBilEl?.value);
+
+ const totalProtein = parseFloat(totalProteinEl?.value || "");
+const albumin = parseFloat(albuminEl?.value || "");
+
+  /* ================= INDIRECT ================= */
+
+  if (indirectEl) {
+    if (!isNaN(totalBil) && !isNaN(directBil)) {
+      indirectEl.value = Math.max(0, totalBil - directBil).toFixed(2);
+    } else {
+      indirectEl.value = "";
+    }
+  }
+
+  /* ================= GLOBULIN ================= */
+
+ /* ================= GLOBULIN ================= */
+
+if (globulinEl) {
+
+  if (!isNaN(totalProtein) && !isNaN(albumin)) {
+
+    const glob = totalProtein - albumin;
+
+    if (glob >= 0) {
+      globulinEl.value = glob.toFixed(2);
+    } else {
+      globulinEl.value = "";
+    }
+
+    if (agRatioEl) {
+      if (glob > 0) {
+        agRatioEl.value = (albumin / glob).toFixed(2);
+      } else {
+        agRatioEl.value = "";
+      }
+    }
+
+  } else {
+
+    globulinEl.value = "";
+    if (agRatioEl) agRatioEl.value = "";
+
+  }
+}
+};
+
+
+window.bindLFTEvents = function (testKey) {
+
+  const triggerFields = [
+    "SERUM BILIRUBIN TOTAL",
+    "DIRECT",
+    "SERUM PROTEINS TOTAL",
+    "ALBUMIN"
+  ];
+
+  triggerFields.forEach(name => {
+
+    const el = document.querySelector(
+      `#${makeKey(testKey, name)}`
+    );
+
+    if (!el) return;
+
+    el.addEventListener("input", function () {
+      window.autoCalculateLFT(testKey);
+    });
+
+    el.addEventListener("change", function () {
+      window.autoCalculateLFT(testKey);
+    });
+
+  });
+};
+
+window.autoCalculateLipid = function (testKey) {
+
+  const get = (name) =>
+    document.querySelector(`#${makeKey(testKey, name)}`);
+
+  const totalEl = get("TOTAL CHOLESTEROL");
+  const tgEl = get("TRIGLYCERIDES");
+  const hdlEl = get("HDL CHOLESTEROL");
+
+  const ldlEl = get("LDL CHOLESTEROL");
+  const vldlEl = get("VLDL CHOLESTEROL");
+  const tcHdlEl = get("T CHOLE. / HDL CHOLE. RATIO");
+  const ldlHdlEl = get("LDL / HDL RATIO");
+  const tgHdlEl = get("TRIGLYCERIDE / HDL RATIO");
+  const nonHdlEl = get("NON HDL CHOLESTEROL");
+
+  const total = parseFloat(totalEl?.value);
+  const tg = parseFloat(tgEl?.value);
+  const hdl = parseFloat(hdlEl?.value);
+
+  // Clear all auto fields
+  [ldlEl, vldlEl, tcHdlEl, ldlHdlEl, tgHdlEl, nonHdlEl]
+    .forEach(el => { if (el) el.value = ""; });
+
+  if (isNaN(total) || isNaN(tg) || isNaN(hdl)) return;
+
+  // ✅ VLDL
+  const vldl = tg / 5;
+  if (vldlEl) vldlEl.value = vldl.toFixed(2);
+
+  // ✅ LDL (Friedewald)
+  if (tg < 400) {
+    const ldl = total - hdl - vldl;
+    if (ldlEl) ldlEl.value = ldl.toFixed(2);
+
+    // LDL/HDL
+    if (hdl !== 0 && ldlHdlEl) {
+      ldlHdlEl.value = (ldl / hdl).toFixed(2);
+    }
+  }
+
+  // ✅ TC/HDL
+  if (hdl !== 0 && tcHdlEl) {
+    tcHdlEl.value = (total / hdl).toFixed(2);
+  }
+
+  // ✅ TG/HDL
+  if (hdl !== 0 && tgHdlEl) {
+    tgHdlEl.value = (tg / hdl).toFixed(2);
+  }
+
+  // ✅ NON HDL
+  if (nonHdlEl) {
+    nonHdlEl.value = (total - hdl).toFixed(2);
+  }
+};
 // function makeKey(testKey, name) {
 //   return `${testKey}_${name}`
 //     .replace(/[^\w]/g, "_")
@@ -473,21 +624,40 @@ else if (isLFT(test)) {
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
   test.fields.forEach(f => {
+
     const key = makeKey(testKey, f.name);
+    const lname = f.name.toLowerCase().trim();
+
+    const isAuto =
+      lname.includes("indirect") ||
+      lname.includes("globulin") ||
+      lname.includes("ag");
+
+    const isTrigger =
+      lname.includes("bilirubin total") ||
+      lname === "direct" ||
+      lname.includes("protein") ||
+      lname.includes("albumin");
 
     html += `
       <label>${f.name}</label>
-     <input
-  type="text"
-  class="input full-row lft-input"
-  id="${key}"
-  inputmode="decimal"
-/>
-
+      <input
+        type="text"
+        class="input full-row lft-input ${isAuto ? "auto-field" : ""}"
+        id="${key}"
+        inputmode="decimal"
+        ${isAuto ? "readonly" : ""}
+       oninput="onlyFloatDot(this)"
+      />
     `;
   });
 
-  html += `</div>`;
+ html += `</div>`;
+
+setTimeout(() => {
+  bindLFTEvents(testKey);
+  autoCalculateLFT(testKey);   // 🔥 MUST BE HERE
+}, 0);
 }
 // ====================== BIOCHEMISTRY : LIPID PROFILE TEST ======================
 else if (isLPT(test)) {
@@ -495,17 +665,31 @@ else if (isLPT(test)) {
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
   test.fields.forEach(f => {
+
     const key = makeKey(testKey, f.name);
+    const lname = f.name.toLowerCase().trim();
+
+    const isAuto =
+      lname.includes("ldl cholesterol") ||
+      lname.includes("vldl") ||
+      lname.includes("ratio") ||
+      lname.includes("non hdl");
+
+    const isTrigger =
+      lname.includes("total cholesterol") ||
+      lname.includes("triglycerides") ||
+      lname.includes("hdl cholesterol");
 
     html += `
       <label>${f.name}</label>
-     <input
-  type="text"
-  class="input full-row lft-input"
-  id="${key}"
-  inputmode="decimal"
-/>
-
+      <input
+        type="text"
+        class="input full-row lipid-input ${isAuto ? "auto-field" : ""}"
+        id="${key}"
+        inputmode="decimal"
+        ${isAuto ? "readonly" : ""}
+        ${isTrigger ? `oninput="onlyFloatDot(this); autoCalculateLipid('${testKey}')"` : `oninput="onlyFloatDot(this)"`}
+      />
     `;
   });
 
