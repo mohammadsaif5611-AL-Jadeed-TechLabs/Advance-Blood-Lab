@@ -1,27 +1,21 @@
 export default {
-  key: "LIVER_FUNCTION_TEST",
+  key: "KIDNEY_FUNCTION_TEST",
   title: "BIOCHEMISTRY REPORT",
-  subtitle: "LIVER FUNCTION TEST",
-  class: "LIVER FUNCTION TEST",
-  testname: "LIVER FUNCTION TEST",
+  subtitle: "KIDNEY FUNCTION TEST",
+  class: "KIDNEY FUNCTION TEST",
+  testname: "KIDNEY FUNCTION TEST",
 
   fields: [
+    { name: "BLOOD UREA", unit: "mg/dl", ref: "10 - 40" },
+    { name: "BUN", unit: "mg/dl", ref: "2 - 20" }, // 🔥 AUTO
+    { name: "SERUM CREATININE", unit: "mg/dl", ref: "0.40 - 1.40" },
 
-    { name: "SERUM BILIRUBIN TOTAL", unit: "mg/dl", ref: "0.2 - 1.2" },
-    { name: "DIRECT", unit: "mg/dl", ref: "0.0 - 0.2" },
-    { name: "INDIRECT", unit: "mg/dl", ref: "0.2 - 1.0" },
+    { sub: "ELECTROLYTES" },
 
-    { name: "SERUM S G O T", unit: "U/L", ref: "10 - 40" },
-    { name: "SERUM S G P T", unit: "U/L", ref: "10 - 40" },
-
-    { name: "SERUM ALKALINE PHOSPHATASE", unit: "IU/L", ref: "37 - 147 | Paediatric : 210 - 515" },
-
-    { name: "SERUM PROTEINS TOTAL", unit: "gm/dl", ref: "6.0 - 8.0" },
-    { name: "ALBUMIN", unit: "gm/dl", ref: "3.2 - 5.0" },
-    { name: "GLOBULIN", unit: "gm/dl", ref: "2.0 - 4.0" },
-
-    { name: "AG RATIO", unit: "", ref: "1.1 - 2.5" },
-
-    { name: "GAMMA GT", unit: "U/L", ref: "5 - 45" }
+    { name: "SERUM SODIUM", unit: "mEq/L", ref: "130 - 149" },
+    { name: "SERUM POTASSIUM", unit: "mEq/L", ref: "3.5 - 5.5" },
+    { name: "SERUM CHLORIDE", unit: "mEq/L", ref: "98 - 107" },
+    { name: "SERUM BICARBONATE", unit: "mEq/L", ref: "23 - 28" },
+    { name: "IONIC CALCIUM", unit: "mmol/L", ref: "3.5 - 5.5" }
   ]
 };
