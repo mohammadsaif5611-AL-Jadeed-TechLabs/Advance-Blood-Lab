@@ -101,7 +101,7 @@ window.autoCalculateCoagulation = function (testKey) {
 
   const setVal = (label, value) => {
     const el = document.getElementById(makeKey(testKey, label));
-    if (el) el.value = value;
+   if (el && !el.dataset.manual) el.value = value;
   };
 
   const ptPatient = getVal("Patient Value (PT)");
@@ -205,8 +205,13 @@ window.autoCalculateLipid = function (testKey) {
   const tgHdlEl = get("TRIGLYCERIDE / HDL RATIO");
   const nonHdlEl = get("NON HDL CHOLESTEROL");
 
-  [ldlEl, vldlEl, tcHdlEl, ldlHdlEl, tgHdlEl, nonHdlEl]
-    .forEach(el => { if (el) el.value = ""; });
+ const autoFields = [ldlEl, vldlEl, tcHdlEl, ldlHdlEl, tgHdlEl, nonHdlEl];
+
+autoFields.forEach(el => {
+  if (el && !el.dataset.manual) {
+    el.value = "";
+  }
+});
 
   if (isNaN(total) || isNaN(tg) || isNaN(hdl)) return;
 
@@ -622,7 +627,11 @@ else if (isLFT(test)) {
 
       
         
-       oninput="onlyFloatDot(this)"
+       oninput="
+  onlyFloatDot(this);
+  ${isTrigger ? `autoCalculateLFT('${testKey}')` : ""}
+  ${isAuto ? `this.dataset.manual='true'` : ""}
+"
       />
     `;
 
@@ -671,14 +680,18 @@ else if (isLPT(test)) {
 
     html += `
       <label>${f.name}</label>
-      <input
-        type="text"
-        class="input full-row lipid-input ${isAuto ? "auto-field" : ""}"
-        id="${key}"
-        inputmode="decimal"
-      
-        ${isTrigger ? `oninput="onlyFloatDot(this); autoCalculateLipid('${testKey}')"` : `oninput="onlyFloatDot(this)"`}
-      />
+     <input
+  type="text"
+  class="input full-row lipid-input ${isAuto ? "auto-field" : ""}"
+  id="${key}"
+  inputmode="decimal"
+
+  oninput="
+    onlyFloatDot(this);
+    ${isTrigger ? `autoCalculateLipid('${testKey}')` : ""}
+    ${isAuto ? `this.dataset.manual='true'` : ""}
+  "
+/>
     `;
   });
 
@@ -737,14 +750,16 @@ else if (isHBA(test)) {
 
     html += `
       <label>${f.name}</label>
-      <input
-        type="text"
-        class="input full-row hba-input ${isAuto ? "auto-field" : ""}"
-        id="${key}"
-        inputmode="decimal"
-       
-        oninput="onlyFloatDot(this)"
-      />
+     <input
+  type="text"
+  class="input full-row hba-input ${isAuto ? "auto-field" : ""}"
+  id="${key}"
+  inputmode="decimal"
+  oninput="
+    onlyFloatDot(this);
+    ${isAuto ? `this.dataset.manual='true'` : `autoCalculateHBA('${testKey}')`}
+  "
+/>
     `;
   });
 
@@ -921,13 +936,15 @@ else if (isKFT(test)) {
     html += `
       <label>${f.name}</label>
       <input
-        type="text"
-        class="input full-row kft-input ${isAuto ? "auto-field" : ""}"
-        id="${key}"
-        inputmode="decimal"
-     
-        oninput="onlyFloatDot(this)"
-      />
+  type="text"
+  class="input full-row kft-input ${isAuto ? "auto-field" : ""}"
+  id="${key}"
+  inputmode="decimal"
+  oninput="
+    onlyFloatDot(this);
+    ${isAuto ? `this.dataset.manual='true'` : `autoCalculateKFT('${testKey}')`}
+  "
+/>
     `;
   });
 
@@ -975,17 +992,17 @@ else if (isCOAGU(test)) {
 
     html += `
       <label>${f.name}</label>
-      <input
-        type="text"
-        class="input full-row ${isOutput ? "auto-field" : ""}"
-        id="${key}"
-        inputmode="${isPlatelet ? "numeric" : "decimal"}"
-        ${isOutput ? "readonly" : ""}
-        oninput="
-          ${isPlatelet ? "onlyIntWithComma(this);" : "onlyFloatDot(this);"}
-          ${isTrigger ? `autoCalculateCoagulation('${testKey}');` : ""}
-        "
-      />
+     <input
+  type="text"
+  class="input full-row ${isOutput ? "auto-field" : ""}"
+  id="${key}"
+  inputmode="${isPlatelet ? "numeric" : "decimal"}"
+  oninput="
+    ${isPlatelet ? "onlyIntWithComma(this);" : "onlyFloatDot(this);"}
+    ${isTrigger ? `autoCalculateCoagulation('${testKey}');` : ""}
+    ${isOutput ? `this.dataset.manual='true';` : ""}
+  "
+/>
     `;
   });
 
@@ -1193,19 +1210,19 @@ const isRBCIndex =
 
 return `
   <label>${fieldName}</label>
-  <input type="text"
-        class="input full-row 
+ <input type="text"
+ class="input full-row 
 ${isDLC ? "dlc-input" : ""} 
 ${isBasophil ? "auto-field baso-input" : ""} 
 ${isRBCIndex ? "auto-field" : ""}"
-         id="${key}"
-         inputmode="decimal"
-         ${(isBasophil || isRBCIndex) ? "readonly" : ""}
-         oninput="
-           onlyFloatDot(this);
-           ${isDLC ? "autoCalculateBasophils();" : ""}
-           ${isRBCTrigger ? "autoCalculateRBCIndices();" : ""}
-         ">
+ id="${key}"
+ inputmode="decimal"
+ oninput="
+   onlyFloatDot(this);
+   ${isDLC ? "autoCalculateBasophils();" : ""}
+   ${isRBCTrigger ? "autoCalculateRBCIndices();" : ""}
+   ${(isBasophil || isRBCIndex) ? "this.dataset.manual='true';" : ""}
+ ">
 `;
 }
 
