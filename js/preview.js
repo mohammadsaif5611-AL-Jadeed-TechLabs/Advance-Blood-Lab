@@ -1339,11 +1339,12 @@ else if (test.class === "KIDNEY FUNCTION TEST") {
     window.kidneyHeaderPrinted = true;
   }
 
-  const electrolyteFields = [
-  "SR. SODIUM",
-  "SR. POTASSIUM",
-  "SR. IONIC CALCIUM",
-  "SR. CHLORIDE"
+ const electrolyteFields = [
+  "SERUM SODIUM",
+  "SERUM POTASSIUM",
+  "SERUM CHLORIDE",
+  "SERUM BICARBONATE",
+  "IONIC CALCIUM"
 ];
 
 const hasElectrolyteValue = electrolyteFields.some(name => {
