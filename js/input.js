@@ -7,10 +7,20 @@ function makeKey(testKey, name) {
     .toUpperCase();
 }
 
+/* =====================================================
+   🔹 HELPER: Safe Number Parse
+===================================================== */
+function toNum(val) {
+  const num = parseFloat(val);
+  return isNaN(num) ? NaN : num;
+}
+
+/* =====================================================
+   🔹 DLC + BASOPHILS AUTO
+===================================================== */
 window.autoCalculateBasophils = function () {
 
   const dlcInputs = document.querySelectorAll(".dlc-input");
-
   let total = 0;
 
   dlcInputs.forEach(input => {
@@ -22,9 +32,14 @@ window.autoCalculateBasophils = function () {
 
   const baso = 100 - total;
 
-  basoInput.value = baso === 0 ? "00" : baso;
+  basoInput.value = !isNaN(baso)
+    ? baso.toFixed(2)
+    : "";
 };
 
+/* =====================================================
+   🔹 RBC INDICES AUTO
+===================================================== */
 window.autoCalculateRBCIndices = function () {
 
   let hb = 0, hct = 0, rbc = 0;
@@ -34,13 +49,12 @@ window.autoCalculateRBCIndices = function () {
 
   document.querySelectorAll("input").forEach(input => {
 
-    const id = input.id.toLowerCase();
+    const id = input.id?.toLowerCase() || "";
 
     if (id.includes("haemoglobin")) hb = parseFloat(input.value) || 0;
     if (id.includes("hct")) hct = parseFloat(input.value) || 0;
     if (id.includes("rbc")) rbc = parseFloat(input.value) || 0;
 
-    // 🔥 EXACT MATCH
     if (id.endsWith("mcv")) mcvInput = input;
     if (id.endsWith("mch")) mchInput = input;
     if (id.endsWith("mchc")) mchcInput = input;
@@ -60,12 +74,12 @@ window.autoCalculateRBCIndices = function () {
 
 document.addEventListener("input", function(e) {
 
-  const id = e.target.id?.toLowerCase();
+  const id = e.target.id?.toLowerCase() || "";
 
   if (
-    id?.includes("haemoglobin") ||
-    id?.includes("hct") ||
-    id?.includes("rbc")
+    id.includes("haemoglobin") ||
+    id.includes("hct") ||
+    id.includes("rbc")
   ) {
     window.autoCalculateRBCIndices();
   }
@@ -73,12 +87,16 @@ document.addEventListener("input", function(e) {
 });
 
 
+/* =====================================================
+   🔹 COAGULATION AUTO
+===================================================== */
 window.autoCalculateCoagulation = function (testKey) {
+
+  if (!testKey) return;
 
   const getVal = (label) => {
     const el = document.getElementById(makeKey(testKey, label));
-    if (!el) return NaN;
-    return parseFloat(el.value.replace(/,/g, ""));
+    return el ? toNum(el.value.replace(/,/g, "")) : NaN;
   };
 
   const setVal = (label, value) => {
@@ -93,62 +111,39 @@ window.autoCalculateCoagulation = function (testKey) {
   const apttPatient = getVal("aPTT Patient Value");
   const apttControl = getVal("aPTT Control Value");
 
-  // Clear outputs
   setVal("Prothrombin Ratio", "");
   setVal("International Normalised Ratio (INR)", "");
   setVal("Prothrombin Index", "");
   setVal("aPTT Ratio", "");
 
-  // ================= PT SECTION =================
   if (!isNaN(ptPatient) && !isNaN(ptControl) && ptControl > 0) {
 
-    // PT Ratio
     const ptRatio = ptPatient / ptControl;
     setVal("Prothrombin Ratio", ptRatio.toFixed(2));
 
-    // INR
     if (!isNaN(isi) && isi > 0) {
       const inr = Math.pow(ptRatio, isi);
       setVal("International Normalised Ratio (INR)", inr.toFixed(2));
     }
 
-    // Prothrombin Index
-    if (ptPatient > 0) {
-      const pi = (ptControl / ptPatient) * 100;
-      setVal("Prothrombin Index", pi.toFixed(2));
-    }
+    const pi = (ptControl / ptPatient) * 100;
+    setVal("Prothrombin Index", pi.toFixed(2));
   }
 
-  // ================= aPTT SECTION =================
   if (!isNaN(apttPatient) && !isNaN(apttControl) && apttControl > 0) {
     const apttRatio = apttPatient / apttControl;
     setVal("aPTT Ratio", apttRatio.toFixed(2));
   }
 };
 
-document.addEventListener("input", function (e) {
 
-  const id = e.target.id?.toLowerCase();
-
-  if (
-    id?.includes("patient_value_pt") ||
-    id?.includes("control_value_ct") ||
-    id?.includes("i_s_i_value") ||
-    id?.includes("aptt_patient_value") ||
-    id?.includes("aptt_control_value")
-  ) {
-    window.autoCalculateCoagulation();
-  }
-
-});
-
-
+/* =====================================================
+   🔹 LFT AUTO
+===================================================== */
 window.autoCalculateLFT = function (testKey) {
 
-  const get = (name) => {
-    const id = makeKey(testKey, name);
-    return document.getElementById(id); // 🔥 Important change
-  };
+  const get = (name) =>
+    document.getElementById(makeKey(testKey, name));
 
   const totalBilEl = get("SERUM BILIRUBIN TOTAL");
   const directBilEl = get("DIRECT");
@@ -159,92 +154,49 @@ window.autoCalculateLFT = function (testKey) {
   const globulinEl = get("GLOBULIN");
   const agRatioEl = get("AG RATIO");
 
-  const totalBil = parseFloat(totalBilEl?.value);
-  const directBil = parseFloat(directBilEl?.value);
-
- const totalProtein = parseFloat(totalProteinEl?.value || "");
-const albumin = parseFloat(albuminEl?.value || "");
-
-  /* ================= INDIRECT ================= */
+  const totalBil = toNum(totalBilEl?.value);
+  const directBil = toNum(directBilEl?.value);
+  const totalProtein = toNum(totalProteinEl?.value);
+  const albumin = toNum(albuminEl?.value);
 
   if (indirectEl) {
-    if (!isNaN(totalBil) && !isNaN(directBil)) {
-      indirectEl.value = Math.max(0, totalBil - directBil).toFixed(2);
-    } else {
-      indirectEl.value = "";
-    }
+    indirectEl.value =
+      (!isNaN(totalBil) && !isNaN(directBil))
+        ? Math.max(0, totalBil - directBil).toFixed(2)
+        : "";
   }
 
-  /* ================= GLOBULIN ================= */
+  if (globulinEl) {
 
- /* ================= GLOBULIN ================= */
+    if (!isNaN(totalProtein) && !isNaN(albumin)) {
 
-if (globulinEl) {
+      const glob = totalProtein - albumin;
+      globulinEl.value = glob >= 0 ? glob.toFixed(2) : "";
 
-  if (!isNaN(totalProtein) && !isNaN(albumin)) {
+      if (agRatioEl) {
+        agRatioEl.value =
+          glob > 0 ? (albumin / glob).toFixed(2) : "";
+      }
 
-    const glob = totalProtein - albumin;
-
-    if (glob >= 0) {
-      globulinEl.value = glob.toFixed(2);
     } else {
       globulinEl.value = "";
+      if (agRatioEl) agRatioEl.value = "";
     }
-
-    if (agRatioEl) {
-      if (glob > 0) {
-        agRatioEl.value = (albumin / glob).toFixed(2);
-      } else {
-        agRatioEl.value = "";
-      }
-    }
-
-  } else {
-
-    globulinEl.value = "";
-    if (agRatioEl) agRatioEl.value = "";
-
   }
-}
 };
 
 
-window.bindLFTEvents = function (testKey) {
-
-  const triggerFields = [
-    "SERUM BILIRUBIN TOTAL",
-    "DIRECT",
-    "SERUM PROTEINS TOTAL",
-    "ALBUMIN"
-  ];
-
-  triggerFields.forEach(name => {
-
-    const el = document.querySelector(
-      `#${makeKey(testKey, name)}`
-    );
-
-    if (!el) return;
-
-    el.addEventListener("input", function () {
-      window.autoCalculateLFT(testKey);
-    });
-
-    el.addEventListener("change", function () {
-      window.autoCalculateLFT(testKey);
-    });
-
-  });
-};
-
+/* =====================================================
+   🔹 LIPID PROFILE AUTO
+===================================================== */
 window.autoCalculateLipid = function (testKey) {
 
   const get = (name) =>
-    document.querySelector(`#${makeKey(testKey, name)}`);
+    document.getElementById(makeKey(testKey, name));
 
-  const totalEl = get("TOTAL CHOLESTEROL");
-  const tgEl = get("TRIGLYCERIDES");
-  const hdlEl = get("HDL CHOLESTEROL");
+  const total = toNum(get("TOTAL CHOLESTEROL")?.value);
+  const tg = toNum(get("TRIGLYCERIDES")?.value);
+  const hdl = toNum(get("HDL CHOLESTEROL")?.value);
 
   const ldlEl = get("LDL CHOLESTEROL");
   const vldlEl = get("VLDL CHOLESTEROL");
@@ -253,44 +205,65 @@ window.autoCalculateLipid = function (testKey) {
   const tgHdlEl = get("TRIGLYCERIDE / HDL RATIO");
   const nonHdlEl = get("NON HDL CHOLESTEROL");
 
-  const total = parseFloat(totalEl?.value);
-  const tg = parseFloat(tgEl?.value);
-  const hdl = parseFloat(hdlEl?.value);
-
-  // Clear all auto fields
   [ldlEl, vldlEl, tcHdlEl, ldlHdlEl, tgHdlEl, nonHdlEl]
     .forEach(el => { if (el) el.value = ""; });
 
   if (isNaN(total) || isNaN(tg) || isNaN(hdl)) return;
 
-  // ✅ VLDL
   const vldl = tg / 5;
   if (vldlEl) vldlEl.value = vldl.toFixed(2);
 
-  // ✅ LDL (Friedewald)
   if (tg < 400) {
     const ldl = total - hdl - vldl;
     if (ldlEl) ldlEl.value = ldl.toFixed(2);
-
-    // LDL/HDL
-    if (hdl !== 0 && ldlHdlEl) {
+    if (hdl !== 0 && ldlHdlEl)
       ldlHdlEl.value = (ldl / hdl).toFixed(2);
-    }
   }
 
-  // ✅ TC/HDL
-  if (hdl !== 0 && tcHdlEl) {
-    tcHdlEl.value = (total / hdl).toFixed(2);
+  if (hdl !== 0) {
+    if (tcHdlEl) tcHdlEl.value = (total / hdl).toFixed(2);
+    if (tgHdlEl) tgHdlEl.value = (tg / hdl).toFixed(2);
   }
 
-  // ✅ TG/HDL
-  if (hdl !== 0 && tgHdlEl) {
-    tgHdlEl.value = (tg / hdl).toFixed(2);
-  }
-
-  // ✅ NON HDL
-  if (nonHdlEl) {
+  if (nonHdlEl)
     nonHdlEl.value = (total - hdl).toFixed(2);
+};
+
+
+/* =====================================================
+   🔹 KFT AUTO
+===================================================== */
+window.autoCalculateKFT = function (testKey) {
+
+  const ureaEl = document.getElementById(makeKey(testKey, "BLOOD UREA"));
+  const bunEl = document.getElementById(makeKey(testKey, "BUN"));
+
+  const urea = toNum(ureaEl?.value);
+
+  if (bunEl) {
+    bunEl.value =
+      !isNaN(urea)
+        ? (urea * 0.467).toFixed(2)
+        : "";
+  }
+};
+
+
+/* =====================================================
+   🔹 HbA1c AUTO
+===================================================== */
+window.autoCalculateHBA = function (testKey) {
+
+  const hbaEl = document.getElementById(makeKey(testKey, "HbA1c"));
+  const eagEl = document.getElementById(makeKey(testKey, "Estimated Average Glucose (eAG)"));
+
+  const hba = toNum(hbaEl?.value);
+
+  if (eagEl) {
+    eagEl.value =
+      !isNaN(hba)
+        ? ((28.7 * hba) - 46.7).toFixed(2)
+        : "";
   }
 };
 // function makeKey(testKey, name) {
@@ -639,17 +612,33 @@ else if (isLFT(test)) {
       lname.includes("protein") ||
       lname.includes("albumin");
 
-    html += `
+      html += `
       <label>${f.name}</label>
       <input
         type="text"
         class="input full-row lft-input ${isAuto ? "auto-field" : ""}"
         id="${key}"
         inputmode="decimal"
-        ${isAuto ? "readonly" : ""}
+
+      
+        
        oninput="onlyFloatDot(this)"
       />
     `;
+
+    // html += `
+    //   <label>${f.name}</label>
+    //   <input
+    //     type="text"
+    //     class="input full-row lft-input ${isAuto ? "auto-field" : ""}"
+    //     id="${key}"
+    //     inputmode="decimal"
+
+    //     ${isAuto ? "readonly" : ""}
+        
+    //    oninput="onlyFloatDot(this)"
+    //   />
+    // `;
   });
 
  html += `</div>`;
@@ -687,7 +676,7 @@ else if (isLPT(test)) {
         class="input full-row lipid-input ${isAuto ? "auto-field" : ""}"
         id="${key}"
         inputmode="decimal"
-        ${isAuto ? "readonly" : ""}
+      
         ${isTrigger ? `oninput="onlyFloatDot(this); autoCalculateLipid('${testKey}')"` : `oninput="onlyFloatDot(this)"`}
       />
     `;
@@ -734,30 +723,37 @@ else if (isHBA(test)) {
 
   test.fields.forEach(f => {
 
-    // ✅ SUB HEADING (ELECTROLYTES)
     if (f.sub) {
       html += `
         <div class="full-row sub-heading">
           ${f.sub}
         </div>
       `;
-      return; // 🔥 important: input mat banao
+      return;
     }
 
     const key = makeKey(testKey, f.name);
+    const isAuto = f.name.includes("Estimated");
 
     html += `
       <label>${f.name}</label>
       <input
         type="text"
-        class="input full-row lft-input"
+        class="input full-row hba-input ${isAuto ? "auto-field" : ""}"
         id="${key}"
         inputmode="decimal"
+       
+        oninput="onlyFloatDot(this)"
       />
     `;
   });
 
   html += `</div>`;
+
+  setTimeout(() => {
+    bindHBAEvents(testKey);
+    autoCalculateHBA(testKey);
+  }, 0);
 }
 
 // ====================== IRON PROFILE TEST ======================
@@ -903,36 +899,44 @@ else if (isSRCAL(test)) {
   html += `</div>`;
 }
 // ====================== BIOCHEMISTRY : KIDNEY FUNCTION TEST ======================
+// ====================== BIOCHEMISTRY : KIDNEY FUNCTION TEST ======================
 else if (isKFT(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
   test.fields.forEach(f => {
 
-    // ✅ SUB HEADING (ELECTROLYTES)
     if (f.sub) {
       html += `
         <div class="full-row sub-heading">
           ${f.sub}
         </div>
       `;
-      return; // 🔥 important: input mat banao
+      return;
     }
 
     const key = makeKey(testKey, f.name);
+    const isAuto = f.name === "BUN";
 
     html += `
       <label>${f.name}</label>
       <input
         type="text"
-        class="input full-row lft-input"
+        class="input full-row kft-input ${isAuto ? "auto-field" : ""}"
         id="${key}"
         inputmode="decimal"
+     
+        oninput="onlyFloatDot(this)"
       />
     `;
   });
 
   html += `</div>`;
+
+  setTimeout(() => {
+    bindKFTEvents(testKey);
+    autoCalculateKFT(testKey);
+  }, 0);
 }
 // ====================== COAGULATION TEST ======================
 else if (isCOAGU(test)) {
