@@ -1,10 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Pathology Report</title>
+  <meta charset="UTF-8">
 
   <!-- 🔥 MOBILE FIX -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+ <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+
+
+
+  <!-- Primary SEO -->
+  <title>Al Jadeed Tech Lab's | Pathology Software</title>
+  <meta name="title" content="Al Jadeed Tech Lab's - Digital Pathology Report System">
+  <meta name="description" content="Generate, manage and download professional pathology reports securely with Al Jadeed Tech Lab's Pathology Report System.">
+  <meta name="keywords" content="Al Jadeed Tech Lab's, Pathology Report, Lab Report, Medical Report System">
+  <meta name="author" content="Al Jadeed Tech Lab's">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph (Facebook / WhatsApp Preview) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://aljadeedtechlabs.github.io/Pathology-Demo-App/">
+  <meta property="og:title" content="Al Jadeed Tech Lab's - Pathology Report System">
+  <meta property="og:description" content="Professional and secure digital pathology report management system.">
+  <meta property="og:image" content="https://aljadeedtechlabs.github.io/Pathology-Demo-App/assets/icon-512.png">
+
+  <!-- Twitter Card -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="Al Jadeed Tech Lab's - Pathology Report System">
+  <meta property="twitter:description" content="Secure digital pathology report system.">
+  <meta property="twitter:image" content="https://aljadeedtechlabs.github.io/Pathology-Demo-App/assets/icon-512.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://aljadeedtechlabs.github.io/Pathology-Demo-App/assets/icon-512.png">
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet">
  
@@ -26,8 +56,8 @@
 
 
 
-   <script type="module" src="./js/main.js"></script>
-  <!-- <script type="module" src="js/main.js"></script> -->
+   <!-- <script type="module" src="./js/main.js"></script> -->
+  <script type="module" src="js/main.js"></script>
 </head>
 
 <body class="bg-light">
@@ -38,8 +68,8 @@
 
     <div class="nav-left">
       <!-- <span class="brand-logo">🧪</span> -->
-      <img style="width: 100px;height: 80px;" class="brand-logo" src="assets/BG.jpg" alt="">
-      <span class="brand-text">Advance Blood Lab</span>
+      <img style="width: 200px;" class="brand-logo" src="assets/logo.png" alt="">
+      <!-- <span class="brand-text">Advance Blood Lab</span> -->
     </div>
 
     <div class="nav-right" id="navMenu">
@@ -61,9 +91,19 @@
   </div>
 </nav>
 
-  
+  <!-- ===== WELCOME LAB CARD ===== -->
+<div class="container-fluid px-lg-5 mt-4">
+  <div id="welcomeCard" class="welcome-premium">
+    <div class="welcome-content">
+      <div class="welcome-small">Welcome Back</div>
+      <div id="labNameText" class="welcome-big"></div>
+    </div>
+  </div>
+</div>
 
-<div class="container mt-4">
+
+
+<div class="container-fluid px-lg-5 mt-4">
 
   <!-- ===== SUBSCRIPTION CARD ===== -->
 <div id="subscriptionCard"
@@ -87,7 +127,8 @@
   </div> -->
 
 
- <form id="patientForm" class="card p-3">
+<form id="patientForm" class="patient-card">
+
 
   <h5 class="mb-3">Patient Information</h5>
 
@@ -123,7 +164,7 @@
     class="form-control mb-2"
     id="ref_by"
     placeholder="REFERRED BY"
-    value="DR. MUJAHID KHAN SIR"
+    value="DR. GOOD NAME"
     oninput="toUpperCaseInput(this)"
   />
 
@@ -186,6 +227,75 @@
 
 </body>
 <style>
+
+/* ===== PREMIUM ANIMATED WELCOME CARD ===== */
+
+.welcome-premium {
+  position: relative;
+  border-radius: 20px;
+  padding: 25px 30px;
+  overflow: hidden;
+  color: white;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+  animation: fadeSlide 0.8s ease;
+  transition: 0.4s ease;
+}
+
+.welcome-premium:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+}
+
+/* Animated glowing effect */
+.welcome-premium::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.25), transparent 60%);
+  animation: rotateGlow 8s linear infinite;
+}
+
+@keyframes rotateGlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 2;
+}
+
+.welcome-small {
+  font-size: 14px;
+  opacity: 0.9;
+  letter-spacing: 1px;
+}
+
+.welcome-big {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Entrance animation */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
   /* =====================
    MOBILE RESPONSIVE FIX
 ===================== */
@@ -392,9 +502,115 @@ body {
   font-weight: 600;
 }
 
+ .patient-card {
+    padding: 18px;
+  }
+
+  #tests {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .welcome-big {
+    font-size: 20px;
+  }
+
 }
 
+/* ===== PREMIUM PATIENT FORM ===== */
+
+.patient-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.06);
+  transition: 0.3s ease;
+}
+
+.patient-card:hover {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+}
+
+/* Section heading */
+.patient-card h5 {
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.patient-card h5::after {
+  content: "";
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  border-radius: 10px;
+}
+
+/* Inputs upgrade */
+.patient-card .form-control {
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: 0.3s ease;
+}
+
+.patient-card .form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+
+/* Next Button Premium */
+.patient-card .btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 14px;
+  padding: 12px;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.patient-card .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102,126,234,0.3);
+}
+
+/* ===== TEST CARD GRID ===== */
+
+#tests {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.test-item {
+  background: #f8f9ff;
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 600;
+  transition: 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.test-item:hover {
+  background: #eef1ff;
+  transform: translateY(-2px);
+}
+
+.test-item.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 6px 20px rgba(102,126,234,0.3);
+}
+
+
 </style>
+
+
 
 <script>
   const toggle = document.getElementById("navToggle");
@@ -449,6 +665,19 @@ function updateNameAndSex() {
 }
 
 
+
+function createTestCard(testName) {
+  const div = document.createElement("div");
+  div.className = "test-item";
+  div.innerText = testName;
+
+  div.addEventListener("click", () => {
+    div.classList.toggle("active");
+  });
+
+  return div;
+}
+
   // Auto set date
   document.addEventListener("DOMContentLoaded", () => {
     const today = new Date().toISOString().split("T")[0];
@@ -482,23 +711,54 @@ async function showLicenceAlert() {
 
   card.style.display = "block";
 
-  function updateCountdown() {
-    const now = new Date();
-    const diff = expiry - now;
+function updateCountdown() {
+  const now = new Date();
+  let diff = expiry - now;
 
-    if (diff <= 0) {
-      text.innerText = "⚠️ Subscription has expired.";
-      return;
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / (1000 * 60)) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-
-    text.innerText =
-      `Subscription expires in ${days}d ${hours}h ${minutes}m ${seconds}s`;
+  if (diff <= 0) {
+    text.innerText = "⚠️ Subscription has expired.";
+    return;
   }
+
+  // Total seconds
+  let totalSeconds = Math.floor(diff / 1000);
+
+  const seconds = totalSeconds % 60;
+  totalSeconds = Math.floor(totalSeconds / 60);
+
+  const minutes = totalSeconds % 60;
+  totalSeconds = Math.floor(totalSeconds / 60);
+
+  const hours = totalSeconds % 24;
+  let totalDays = Math.floor(totalSeconds / 24);
+
+  const years = Math.floor(totalDays / 365);
+  totalDays %= 365;
+
+  const months = Math.floor(totalDays / 30);
+  const days = totalDays % 30;
+
+  let display = "Subscription valid for ";
+
+  if (years >= 1) {
+    display += `${years} Yr `;
+    if (months > 0) display += `${months} Mo `;
+    if (days > 0) display += `${days} D `;
+  }
+  else if (months >= 1) {
+    display += `${months} Mo `;
+    if (days > 0) display += `${days} D `;
+  }
+  else {
+    display += `${days} D `;
+  }
+
+  display += `${hours}h ${minutes}m ${seconds}s`;
+
+  text.innerText = display.trim();
+}
+
+
 
   // Run immediately
   updateCountdown();
@@ -530,7 +790,29 @@ if (daysLeft > 0 && daysLeft <= 3) {
   document.addEventListener("DOMContentLoaded", showLicenceAlert);
 </script>
 
+<script type="module">
+  import { supabase } from "./js/supabase.js";
+
+  async function showLabName() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) return;
+
+    const userId = sessionData.session.user.id;
+
+    const { data: user } = await supabase
+      .from("users")
+      .select("lab_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (user) {
+      document.getElementById("labNameText").innerText =
+        user.lab_name.toUpperCase();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", showLabName);
+</script>
 
 
 </html>
-
