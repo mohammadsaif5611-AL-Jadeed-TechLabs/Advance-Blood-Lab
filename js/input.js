@@ -472,6 +472,12 @@ const isTHYROID2 = test =>
 const isSRCAL = test =>
   String(test.key || "").toUpperCase() === "SRCAL";
 
+const isCARDP = test =>
+  String(test.key || "").toUpperCase() === "CARDIAC PROFILE";
+
+const isSICK = test =>
+  String(test.class || "").toUpperCase() === "SICKLING";
+
 
 
   // CBC test detection
@@ -530,7 +536,66 @@ if (isCRP(test)) {
 
   html += `</div>`;
 }
+// ====================== TROPONIN ======================
+else if (test.class === "TROPONIN") {
+console.log("TROPONIN TEST OBJECT:", test);
+console.log("TEST KEY:", testKey);
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+  `;
 
+  (test.sections || []).forEach(section => {
+
+    html += `<h6 class="mt-3">${section.title}</h6>`;
+    html += `<div>`;
+
+    (section.fields || []).forEach(f => {
+
+      const name = f.name;
+      const key  = makeKey(testKey, name);
+
+      // 🔹 SELECT FIELD
+      if (f.type === "select") {
+        html += `
+          <label>${name}</label>
+          <select id="${key}" class="input full-row">
+            <option value="">Select</option>
+            ${(f.options || []).map(opt =>
+              `<option value="${opt}">${opt}</option>`
+            ).join("")}
+          </select>
+        `;
+      }
+
+      // 🔹 CLIA FIELD
+      // else if (name === "Troponin I Plasma (CLIA)") {
+      //   html += `
+      //     <div id="${key}_wrapper" style="display:none">
+      //       <label>${name}${f.unit ? " (" + f.unit + ")" : ""}</label>
+      //       <input type="text"
+      //              id="${key}"
+      //              class="input full-row"
+      //              placeholder="0.3">
+      //     </div>
+      //   `;
+      // }
+
+      // 🔹 NORMAL TEXT FIELD
+      else if (f.type === "text") {
+        html += `
+          <label>${name}</label>
+          <input type="text"
+                 id="${key}"
+                 class="input full-row"
+                 placeholder="${name}">
+        `;
+      }
+
+    });
+
+    html += `</div>`;
+  });
+}
     // ====================== TEST SECTIONS ======================
   else if (test.sections && !isSEROLOGY(test)) {
 
@@ -547,53 +612,66 @@ if (isCRP(test)) {
 
 
 // ====================== BIOCHEMISTRY: BLOOD SUGAR TEST ======================
-else if  (isSugarTest(test)) {
+else if (isSugarTest(test)) {
 
-  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+ html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
- test.fields.forEach(f => {
+test.fields.forEach(f => {
 
-  // ❌ skip sub-only rows in FORM
-  if (!f.name) return;
+  // ✅ SECTION HEADING SHOW
+  if (f.section) {
+    html += `
+      <div class="full-row section-heading">
+        ${f.section}
+      </div>
+    `;
+    return;
+  }
 
-  const name = f.name;
-  const sub = f.sub || "";
-  const key = makeKey(testKey, f.name);
-
-
-    // ✅ PARALLEL URINE SUGAR → SELECT
-if (f.type === "select") {
-  html += `
-    <label>${name}</label>
-    <select class="input full-row" id="${key}">
-      <option value="">Select</option>
-      ${f.options.map(opt =>
-        `<option value="${opt}">${opt}</option>`
-      ).join("")}
-    </select>
-  `;
-}
-
-
-    // ✅ BLOOD SUGAR INPUT
-    else {
+  // ❌ Skip if no name (like sub rows)
+  if (!f.name) {
+    if (f.sub) {
       html += `
-        <label>
-          ${name}
-          ${sub ? `<br><span class="sub-label">${sub}</span>` : ""}
-        </label>
-        <input
-          type="text"
-          class="input full-row"
-          id="${key}"
-           inputmode="decimal"
-           oninput="onlyFloatDot(this)""
-        >
+        <div class="full-row sub-label">
+          ${f.sub}
+        </div>
       `;
     }
-  });
+    return;
+  }
 
-  html += `</div>`;
+  const key = makeKey(testKey, f.name);
+
+  // ✅ SELECT FIELD
+  if (f.type === "select") {
+    html += `
+      <label>${f.name}</label>
+      <select class="input full-row" id="${key}">
+        <option value="">Select</option>
+        ${f.options.map(opt =>
+          `<option value="${opt}">${opt}</option>`
+        ).join("")}
+      </select>
+    `;
+  }
+
+  // ✅ DECIMAL FIELD
+  else {
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row"
+        id="${key}"
+        inputmode="decimal"
+        oninput="onlyFloatDot(this)"
+      >
+    `;
+  }
+
+});
+
+html += `</div>`;
 }
 
 // ====================== BIOCHEMISTRY : LIVER FUNCTION TEST ======================
@@ -729,6 +807,337 @@ else if (isESR(test)) {
 
   html += `</div>`;
 }
+
+// ====================== FLUID EXAMINATION ======================
+// ====================== FLUID ======================
+else if (test.class === "FLUID") {
+
+  html += `<h5 class="mt-3 mb-2">${test.title}</h5><div>`;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    html += `<label>${f.name} ${f.unit ? "(" + f.unit + ")" : ""}</label>`;
+
+    // Heading special case
+    if (f.name === "Heading") {
+
+      html += `
+        <select id="${key}" class="input">
+          ${test.headings.map(h => `<option value="${h}">${h}</option>`).join("")}
+        </select>
+      `;
+    }
+
+    else if (f.type === "select") {
+
+      html += `
+        <select id="${key}" class="input">
+          ${f.options.map(o => `<option value="${o}">${o}</option>`).join("")}
+        </select>
+      `;
+    }
+
+    else if (f.type === "textarea") {
+
+      html += `<textarea id="${key}" class="input"></textarea>`;
+    }
+
+    else {
+
+      html += `<input type="text" id="${key}" class="input" />`;
+    }
+
+  });
+
+  html += `</div>`;
+}
+// ====================== HEMATOLOGY : SICKLING TEST ======================
+// ====================== HEMATOLOGY : SICKLING TEST ======================
+else if (isSICK(test)) {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.subtitle}</h5>
+    <div class="grid">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+    const timeKey = makeKey(testKey, f.name + "_TIME");
+
+    html += `
+      <div class="full-row sickling-row">
+        <label>${f.name}</label>
+
+        <select id="${key}" class="input">
+          <option value="">Select</option>
+          ${f.options.map(opt => `
+            <option value="${opt}">${opt}</option>
+          `).join("")}
+        </select>
+    `;
+
+    // ✅ ONLY for EARLY & LATE add time input
+    if (f.name === "EARLY" || f.name === "LATE") {
+
+      html += `
+        <input 
+          type="text"
+          placeholder="After __ hrs"
+          id="${timeKey}"
+          class="input time-input"
+        />
+      `;
+    }
+
+    html += `</div>`;
+  });
+
+  html += `</div>`;
+}
+// ====================== HEMATOLOGY : COOMBS TEST ======================
+else if (test.class === "COOMBS TEST") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.subtitle}</h5>
+    <div class="grid">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <div class="field full-row">
+        <label for="${key}">${f.name}</label>
+        <select id="${key}" class="input">
+          <option value="">Select</option>
+          ${f.options.map(opt => `
+            <option value="${opt}">${opt}</option>
+          `).join("")}
+        </select>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== BGA TEST ======================
+else if (test.class === "BGA") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+    <div class="">
+  `;
+
+  test.fields.forEach(f => {
+
+    if (f.section) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.section}
+        </div>
+      `;
+      return;
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        id="${key}"
+        class="input"
+        inputmode="decimal"
+        oninput="onlyFloatDot(this);"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== PREGNANCY TEST ======================
+else if (test.class === "PREGNANCY") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+    <div class="">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    // 🔹 URINE PREGNANCY TEST (Dropdown)
+    if (f.name === "URINE PREGNANCY TEST") {
+
+      html += `
+        <label>${f.name}</label>
+        <select
+          id="${key}"
+          class="input"
+        >
+          <option value=""></option>
+          <option value="POSITIVE">POSITIVE</option>
+          <option value="NEGATIVE">NEGATIVE</option>
+        </select>
+      `;
+    }
+
+    // 🔹 REMARK (Text Input)
+    else if (f.name === "REMARK") {
+
+      html += `
+        <label>${f.name}</label>
+        <input
+          type="text"
+          id="${key}"
+          class="input"
+        />
+      `;
+    }
+
+  });
+
+  html += `</div>`;
+}
+// ====================== MANTOUX + MALARIA ======================
+else if (test.class === "MXMAL") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+    <div class="">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    // 🔹 Mantoux numeric
+    if (f.name === "Mantoux Test") {
+      html += `
+        <label>${f.name}</label>
+        <input
+          type="text"
+          id="${key}"
+          class="input"
+          inputmode="decimal"
+        />
+      `;
+    }
+
+    else if (f.name === "Induration") {
+      html += `
+        <label>${f.name}</label>
+        <input
+          type="text"
+          id="${key}"
+          class="input"
+        />
+      `;
+    }
+
+    // 🔹 Malaria dropdown
+    else {
+      html += `
+        <label>${f.name}</label>
+        <select id="${key}" class="input">
+          <option value=""></option>
+          <option value="NEGATIVE">NEGATIVE</option>
+          <option value="POSITIVE">POSITIVE</option>
+          <option value="REACTIVE">REACTIVE</option>
+          <option value="NON REACTIVE">NON REACTIVE</option>
+        </select>
+      `;
+    }
+
+  });
+
+  html += `</div>`;
+}
+// ====================== ADA TEST ======================
+else if (test.class === "ADA") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+    <div class="">
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    if (f.name === "ADA") {
+      html += `
+        <label>${f.name} (U/L)</label>
+        <input
+          type="text"
+          id="${key}"
+          class="input"
+          inputmode="decimal"
+          oninput="onlyFloatDot(this);"
+        />
+      `;
+    }
+
+    if (f.name === "Sample Type") {
+      html += `
+        <label>Sample Type</label>
+        <select id="${key}" class="input">
+          <option value="Serum">Serum</option>
+          <option value="CSF">CSF</option>
+        </select>
+      `;
+    }
+
+  });
+
+  html += `</div>`;
+}
+
+// ====================== BETA HCG ======================
+else if (test.class === "BHCG") {
+
+  html += `
+    <h5 class="mt-3 mb-2">${test.title}</h5>
+    <div>
+  `;
+
+  test.fields.forEach(f => {
+
+    const key = makeKey(testKey, f.name);
+
+    if (f.name === "β - HCG") {
+      html += `
+        <label>${f.name} (${f.unit})</label>
+        <input 
+          type="text"
+          id="${key}"
+          class="input"
+          inputmode="decimal"
+          oninput="onlyFloatDot(this);"
+        />
+      `;
+    }
+
+    if (f.name === "Sample Type") {
+      html += `
+        <label>Sample Type</label>
+        <select id="${key}" class="input">
+          ${f.options.map(opt => `<option value="${opt}">${opt}</option>`).join("")}
+        </select>
+      `;
+    }
+
+  });
+
+  html += `</div>`;
+}
+
+
 // ====================== HBA1c TEST ======================
 else if (isHBA(test)) {
 
@@ -883,6 +1292,38 @@ else if (isTHYROID2(test)) {
 
 // ====================== SERUM CALCIUM ======================
 else if (isSRCAL(test)) {
+
+  html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
+
+  test.fields.forEach(f => {
+
+    // ✅ SUB HEADING (ELECTROLYTES)
+    if (f.sub) {
+      html += `
+        <div class="full-row sub-heading">
+          ${f.sub}
+        </div>
+      `;
+      return; // 🔥 important: input mat banao
+    }
+
+    const key = makeKey(testKey, f.name);
+
+    html += `
+      <label>${f.name}</label>
+      <input
+        type="text"
+        class="input full-row lft-input"
+        id="${key}"
+        inputmode="decimal"
+      />
+    `;
+  });
+
+  html += `</div>`;
+}
+// ====================== SERUM CALCIUM ======================
+else if (isCARDP(test)) {
 
   html += `<h5 class="mt-3 mb-2">${test.subtitle}</h5><div class="grid">`;
 
@@ -1180,6 +1621,26 @@ else if (test.fields && !isCRP(test)) {
 
   const lname = fieldName.toLowerCase();
 
+  // 🔥 BLOOD GROUP SELECT FIELD
+// 🔥 BLOOD GROUP SELECT FIELD
+if (fieldName === "BLOOD GROUP & RH TYPE") {
+  return `
+    <label>${fieldName}</label>
+    <select class="input full-row" id="${key}">
+      <option value="">Select</option>
+      <option value="'A' Rh POSITIVE">'A' Rh POSITIVE</option>
+      <option value="'A' Rh NEGATIVE">'A' Rh NEGATIVE</option>
+      <option value="'B' Rh POSITIVE">'B' Rh POSITIVE</option>
+      <option value="'B' Rh NEGATIVE">'B' Rh NEGATIVE</option>
+      <option value="'AB' Rh POSITIVE"'>'AB' Rh POSITIVE</option>
+      <option value="'AB' Rh NEGATIVE"'>'AB' Rh NEGATIVE</option>
+      <option value="'O' Rh POSITIVE">'O' Rh POSITIVE</option>
+      <option value="'O' Rh NEGATIVE">'O' Rh NEGATIVE</option>
+      <option value="OTHER">OTHER</option>
+    </select>
+  `;
+}
+
   if (isCommaField(lname)) {
     return `
       <label>${fieldName}</label>
@@ -1304,6 +1765,33 @@ if (
     `;
   }
 
+ // ================= TROPONIN I SHOW CLIA =================
+document.addEventListener("change", (e) => {
+
+  if (!e.target.id.includes("TROPONIN_Test Type")) return;
+
+  const selected = e.target.value;
+
+  const wrapper = document.getElementById(
+    makeKey("TROPONIN", "Troponin I Plasma (CLIA)") + "_wrapper"
+  );
+
+  if (!wrapper) return;
+
+  if (selected === "TROPONIN I") {
+    wrapper.style.display = "block";
+  } else {
+    wrapper.style.display = "none";
+
+    const input = document.getElementById(
+      makeKey("TROPONIN", "Troponin I Plasma (CLIA)")
+    );
+
+    if (input) input.value = "";
+  }
+
+});
+
 // 🔒 SGOT hard lock (typing + paste + mobile safe)
 document.addEventListener("input", e => {
   const el = e.target;
@@ -1387,7 +1875,7 @@ document.addEventListener("change", e => {
   }
 });
 
-document.querySelectorAll("input").forEach(inp => {
+document.querySelectorAll("input, textarea").forEach(inp => {
   if (
     inp.id &&
     !inp.id.endsWith("_other") &&
