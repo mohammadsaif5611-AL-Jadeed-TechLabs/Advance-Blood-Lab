@@ -1690,38 +1690,46 @@ ${isRBCIndex ? "auto-field" : ""}"
 
 
     // ====================== URINE ANALYSIS FIELDS ======================
-    if (test.title.toLowerCase().includes("urine")) {
-const fieldKey = makeKey(testKey, f[0]);
+ // ====================== URINE ANALYSIS FIELDS ======================
+if (test.title.toLowerCase().includes("urine")) {
 
-      // If URINE.js field is defined as SELECT with options
-      if (typeof f[1] === "object" && f[1].type === "select") {
-        return `
-          <label>${f[0]}</label>
-          <select class="input full-row" id="${fieldKey}" onchange="toggleOther(this)">
-            ${f[1].options.map(opt =>
-              `<option value="${opt}">${opt}</option>`
-            ).join("")}
-            <option value="OTHER">Other</option>
-          </select>
-         <input
-  type="text"
-  class="input full-row"
-  id="${fieldKey}_other"
-  placeholder="Specify ${f[0]}"
-  style="display:none">
+  const fieldKey = makeKey(testKey, f[0]);
 
-        `;
-      }
+  // If URINE.js field is defined as SELECT with options
+  if (typeof f[1] === "object" && f[1].type === "select") {
+    return `
+      <label>${f[0]}</label>
 
-      // Text-type urine fields (Quantity, Nature, Reaction etc.)
-      return `
-        <label>${f[0]}</label>
-        <input type="text"
-               class="input full-row"
-               id="${fieldKey}"
-  value="${f[1]?.default || ""}">
-      `;
-    }
+      <select class="input full-row" id="${fieldKey}" onchange="toggleOther(this)">
+      
+        <option value="" selected disabled></option>
+
+        ${f[1].options.map(opt =>
+          `<option value="${opt}">${opt}</option>`
+        ).join("")}
+
+        <option value="OTHER">Other</option>
+
+      </select>
+
+      <input
+        type="text"
+        class="input full-row"
+        id="${fieldKey}_other"
+        placeholder="Specify ${f[0]}"
+        style="display:none">
+    `;
+  }
+
+  // Text-type urine fields
+  return `
+    <label>${f[0]}</label>
+    <input type="text"
+           class="input full-row"
+           id="${fieldKey}"
+           value="${f[1]?.default || ""}">
+  `;
+}
 
     // ====================== PS FOR MP (HEMATOLOGY) ======================
 if (
