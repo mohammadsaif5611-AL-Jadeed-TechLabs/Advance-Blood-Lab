@@ -14,7 +14,7 @@ export default {
           options: ["Pale Yellow", "Yellow", "Reddish", "Colorless", "Hard Colored", "Light Yellow", "Dark Yellow", "Whitish"]
         }],
 
-        ["NATURE", { type: "text", default: "Random" }],
+      
 
         ["NATURE", {
           type: "select",
@@ -44,11 +44,11 @@ export default {
         }],
         ["BILE SALT", {
           type: "select",
-           options: ["NIL", "Increased","Traces", "Present +", "Present ++", "Present +++","Present 0.5%","Present 1%","Present 1.5%","Present 2%","Present 0.5 gm %","Present 1 gm %","Present 1.5 gm %","Present 2 gm %"]
+           options: ["Absent", "Increased","Traces", "Present +", "Present ++", "Present +++","Present 0.5%","Present 1%","Present 1.5%","Present 2%","Present 0.5 gm %","Present 1 gm %","Present 1.5 gm %","Present 2 gm %"]
         }],
         ["BILE PIGMENT", {
           type: "select",
-           options: ["NIL", "Increased","Traces", "Present +", "Present ++", "Present +++","Present 0.5%","Present 1%","Present 1.5%","Present 2%","Present 0.5 gm %","Present 1 gm %","Present 1.5 gm %","Present 2 gm %"]
+           options: ["Absent", "Increased","Traces", "Present +", "Present ++", "Present +++","Present 0.5%","Present 1%","Present 1.5%","Present 2%","Present 0.5 gm %","Present 1 gm %","Present 1.5 gm %","Present 2 gm %"]
         }],
         ["KETONE BODIES", {
           type: "select",
