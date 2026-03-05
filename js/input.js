@@ -1689,23 +1689,27 @@ ${isRBCIndex ? "auto-field" : ""}"
 
 
 
-    // ====================== URINE ANALYSIS FIELDS ======================
- // ====================== URINE ANALYSIS FIELDS ======================
+
+// ====================== URINE ANALYSIS FIELDS ======================
 if (test.title.toLowerCase().includes("urine")) {
 
   const fieldKey = makeKey(testKey, f[0]);
 
-  // If URINE.js field is defined as SELECT with options
+  // 🔹 SELECT TYPE FIELD
   if (typeof f[1] === "object" && f[1].type === "select") {
+
     return `
       <label>${f[0]}</label>
 
-      <select class="input full-row" id="${fieldKey}" onchange="toggleOther(this)">
-      
-        <option value="" selected disabled></option>
+      <select class="input full-row"
+              id="${fieldKey}"
+              onchange="toggleOther(this)">
 
-        ${f[1].options.map(opt =>
-          `<option value="${opt}">${opt}</option>`
+        <!-- Blank option -->
+        <option value=""></option>
+
+        ${f[1].options.map((opt,i) =>
+          `<option value="${opt}" ${i === 0 ? "selected" : ""}>${opt}</option>`
         ).join("")}
 
         <option value="OTHER">Other</option>
@@ -1721,12 +1725,13 @@ if (test.title.toLowerCase().includes("urine")) {
     `;
   }
 
-  // Text-type urine fields
+  // 🔹 TEXT TYPE FIELD
   return `
     <label>${f[0]}</label>
     <input type="text"
            class="input full-row"
            id="${fieldKey}"
+           placeholder="${f[0]}"
            value="${f[1]?.default || ""}">
   `;
 }
