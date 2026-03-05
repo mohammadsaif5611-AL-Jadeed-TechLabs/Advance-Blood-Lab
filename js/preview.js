@@ -3381,52 +3381,61 @@ else if (test.title?.toUpperCase().includes("URINE")) {
     </tr>
   `;
 
-  test.sections.forEach(section => {
+test.sections.forEach(section => {
 
-    html += `
-      <tr class="bio-subtitle">
-        <th colspan="2">${section.name}</th>
-      </tr>
-    `;
-section.fields.forEach(f => {
-  const fieldName = f[0];
-  const config = f[1] || {};
-  const fieldKey = makeKey(testKey, fieldName);
-  const value = report[fieldKey];
+  // 🔎 check if this section has any value
+  const sectionHasValue = section.fields.some(f => {
+    const key = makeKey(testKey, f[0]);
+    return report[key];
+  });
 
-  if (!value) return;
-
-  let cls = "";
-
-  // 🟢 TEXT → always normal
-  if (config.type === "text") {
-    cls = "normal-value";
-  }
-
-  // 🟢 SELECT → first option normal, rest abnormal
-  else if (
-    config.type === "select" &&
-    Array.isArray(config.options) &&
-    config.options.length
-  ) {
-    cls =
-      value === config.options[0]
-        ? "normal-value"
-        : "abnormal-value";
-  }
+  // ❌ skip section if no values
+  if (!sectionHasValue) return;
 
   html += `
-    <tr class="test-row">
-      <td>${fieldName}</td>
-      <td class="td-result">
-        <span class="result-value ${cls}">${value}</span>
-      </td>
+    <tr class="bio-subtitle">
+      <th colspan="2">${section.name}</th>
     </tr>
   `;
-});
 
+  section.fields.forEach(f => {
+    const fieldName = f[0];
+    const config = f[1] || {};
+    const fieldKey = makeKey(testKey, fieldName);
+    const value = report[fieldKey];
 
+    if (!value) return;
+
+    let cls = "";
+
+    // 🟢 TEXT → always normal
+    if (config.type === "text") {
+      cls = "normal-value";
+    }
+
+    // 🟢 SELECT → first option normal, rest abnormal
+    else if (
+      config.type === "select" &&
+      Array.isArray(config.options) &&
+      config.options.length
+    ) {
+      cls =
+        value === config.options[0]
+          ? "normal-value"
+          : "abnormal-value";
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${fieldName}</td>
+        <td class="td-result">
+          <span class="result-value ${cls}">${value}</span>
+        </td>
+      </tr>
+    `;
   });
+
+});
 
   html += `</table>`;
 }
