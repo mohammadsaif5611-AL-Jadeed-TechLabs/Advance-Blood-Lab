@@ -22,7 +22,23 @@ async function getNextLRN(userId) {
   return maxLRN + 1;
 }
 
+function updatePageNumbers() {
 
+  const pages = document.querySelectorAll(".page");
+
+  const total = pages.length;
+
+  pages.forEach((page, index) => {
+
+    const pageNumber = page.querySelector(".page-number");
+
+    if (pageNumber) {
+      pageNumber.textContent = `P.NO - ${index + 1} / ${total}`;
+    }
+
+  });
+
+}
 
 let generatedLRN = null;
 
@@ -1013,11 +1029,17 @@ content.id = "page-content";
   footer.className = "footer";
   footer.innerHTML = `
     <div class="footer-line"></div>
+   
+
     <div class="footer-text">
-      P.NO - 1 ***ADVANCE BLOOD CLINICAL LABORATORY, WADNER BHOLJI ***
-    </div>
+<span class="page-number"></span> ***ADVANCE BLOOD CLINICAL LABORATORY, WADNER BHOLJI ***
+</div>
     <div class="footer-thanks">"Thanks for Referral"</div>
   `;
+
+  //  <div class="footer-text">
+  //     P.NO - 1 ***ADVANCE BLOOD CLINICAL LABORATORY, WADNER BHOLJI ***
+  //   </div>
 
   /* ===== FOOTER SAFE SPACE ===== */
   const footerSafe = document.createElement("div");
@@ -3575,15 +3597,6 @@ else if (
 
 let psForMpKey = null; // 🔥 PS FOR MP ko last ke liye store
 
-// 🔴 NEW VARIABLES
-let smallTestCount = 0;
-let hasCBC = false;
-let hasUrine = false;
-let forceSecondPage = false;
-let pageBreakDone = false;
-
-let forceSecondPageAfterCBC = false;
-
 // baadme 
 
 function renderPreview() {
@@ -3597,38 +3610,9 @@ function renderPreview() {
   serologyGroup.length = 0;
   psForMpKey = null;
 
-  smallTestCount = 0;
-hasCBC = false;
-hasUrine = false;
-forceSecondPage = false;
-pageBreakDone = false;
-
-forceSecondPageAfterCBC = false;
-
   /* ================= PAGINATION ================= */
 
-/* ===== DETECT CBC + MULTIPLE TESTS ===== */
 
-
-
-selectedTests.forEach(testKey => {
-
-  const test = Array.isArray(Tests)
-    ? Tests.find(t => t.key === testKey)
-    : Tests[testKey];
-
-  if (!test) return;
-
-  const name = (test.testname || "").toUpperCase();
-
-  if (name.includes("CBC")) {
-    hasCBC = true;
-  }
-
-});
-
-// 🔴 CBC + more tests
-forceSecondPageAfterCBC = hasCBC && selectedTests.length > 1;
 
 // yaha tk  
 selectedTests.forEach(testKey => {
@@ -3659,18 +3643,6 @@ if (!test) {
   }
 
   if (!currentPage) newPage();
-
-
-  // 🔴 FORCE PAGE 2 AFTER CBC + URINE
-const name = (test.testname || "").toUpperCase();
-
-// 🔴 CBC ke baad page break
-if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
-  newPage();
-  pageBreakDone = true;
-}
-
-
 
   const block = document.createElement("div");
   block.className = "test-block serology-block category-block";
@@ -3733,8 +3705,9 @@ document.querySelectorAll(".page").forEach(p => {
   if (!tests || tests.children.length === 0) p.remove();
 });
 
-}
+updatePageNumbers();
 
+}
 
 
 function downloadColoredPDF() {
@@ -3876,5 +3849,4 @@ window.download = async () => {
 
 document.getElementById("downloadBtn")
   ?.addEventListener("click", download);
-
 
