@@ -1,5 +1,5 @@
 const urineOptions = [
-  "Absent","Traces","F.Traces","Present +","Present ++","Present +++",
+  "Absent","Traces","F.Traces","Present +","Present ++","Present +++","Present ++++",
   "Present 0.5 gm %","Present 1 gm %","Present 1.5 gm %","Present 2 gm %"
 ];
 
@@ -90,4 +90,5 @@ export default {
     }
 
   ]
+
 };
