@@ -16,6 +16,6 @@ export default {
     { name: "SERUM POTASSIUM", unit: "mEq/L", ref: "3.5 - 5.5" },
     { name: "SERUM CHLORIDE", unit: "mEq/L", ref: "98 - 107" },
     { name: "SERUM BICARBONATE", unit: "mEq/L", ref: "23 - 28" },
-    { name: "IONIC CALCIUM", unit: "mmol/L", ref: "3.5 - 5.5" }
+    { name: "IONIC CALCIUM", unit: "mmol/L", ref: "1.10 - 1.35" }
   ]
 };
