@@ -181,8 +181,8 @@ body {
   z-index: 1;
 
   padding-top: 51mm;     /* top image */
-  padding-left: 16mm;
-  padding-right: 16mm;
+  padding-left: 13mm;
+  padding-right: 13mm;
   padding-bottom: 68mm;  /* bottom image */
 
   height: 100%;
@@ -348,10 +348,10 @@ table {
  
 }
 .test-head th {
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 700;
   /* border: 1px solid #000; */
-  padding: 4px 6px;
+  padding: 6px 6px;
 }
 
 /* COLUMN ALIGNMENT */
@@ -591,11 +591,19 @@ table {
       font-size: 12px;
     color: #434343;
 }
+.section-title td {
+  font-weight: bold;
+  padding-top: 10px;
+}
 
+.sub-heading td {
+  font-style: italic;
+  padding-top: 5px;
+}
 
-
-
-
-
-
-
+.note-row td,
+.comment-row td {
+  padding-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
