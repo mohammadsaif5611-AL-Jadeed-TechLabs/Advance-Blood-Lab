@@ -1,8 +1,8 @@
 {
   "name": "Al Jadeed Tech Lab's",
   "short_name": "اَلْجَدِيد",
-  "start_url": "/Pathology-Demo-App/?v=3",
-  "scope": "/Pathology-Demo-App/",
+  "start_url": "/Advance-Blood-Lab/?v=3",
+  "scope": "/Advance-Blood-Lab/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
