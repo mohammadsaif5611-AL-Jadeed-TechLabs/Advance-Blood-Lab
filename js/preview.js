@@ -3597,6 +3597,15 @@ else if (
 
 let psForMpKey = null; // 🔥 PS FOR MP ko last ke liye store
 
+// 🔴 NEW VARIABLES
+let smallTestCount = 0;
+let hasCBC = false;
+let hasUrine = false;
+let forceSecondPage = false;
+let pageBreakDone = false;
+
+let forceSecondPageAfterCBC = false;
+
 // baadme 
 
 function renderPreview() {
@@ -3610,9 +3619,38 @@ function renderPreview() {
   serologyGroup.length = 0;
   psForMpKey = null;
 
+  smallTestCount = 0;
+hasCBC = false;
+hasUrine = false;
+forceSecondPage = false;
+pageBreakDone = false;
+
+forceSecondPageAfterCBC = false;
+
   /* ================= PAGINATION ================= */
 
+/* ===== DETECT CBC + MULTIPLE TESTS ===== */
 
+
+
+selectedTests.forEach(testKey => {
+
+  const test = Array.isArray(Tests)
+    ? Tests.find(t => t.key === testKey)
+    : Tests[testKey];
+
+  if (!test) return;
+
+  const name = (test.testname || "").toUpperCase();
+
+  if (name.includes("CBC")) {
+    hasCBC = true;
+  }
+
+});
+
+// 🔴 CBC + more tests
+forceSecondPageAfterCBC = hasCBC && selectedTests.length > 1;
 
 // yaha tk  
 selectedTests.forEach(testKey => {
@@ -3643,6 +3681,18 @@ if (!test) {
   }
 
   if (!currentPage) newPage();
+
+
+  // 🔴 FORCE PAGE 2 AFTER CBC + URINE
+const name = (test.testname || "").toUpperCase();
+
+// 🔴 CBC ke baad page break
+if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
+  newPage();
+  pageBreakDone = true;
+}
+
+
 
   const block = document.createElement("div");
   block.className = "test-block serology-block category-block";
