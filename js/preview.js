@@ -1646,63 +1646,7 @@ else if (test.class === "LIVER FUNCTION TEST") {
     `;
   });
 }
-/* ================= LIPID PROFILE  ================= */
-else if (test.class === "LIPID REPORT") {
 
-  const hasValue = test.fields.some(f => {
-    const k = makeKey(testKey, f.name);
-    return report[k];
-  });
-
-  if (!hasValue) return "";
-
-  if (!lipidHeaderPrinted) {
-    html += `
-      <tr class="test-title">
-        <th colspan="4">BIOCHEMISTRY REPORT</th>
-      </tr>
-      <tr class="test-head">
-        <th>INVESTIGATION</th>
-        <th>RESULT</th>
-        <th>UNIT</th>
-        <th>REFERENCE RANGE</th>
-      </tr>
-      <tr class="bio-subtitle">
-        <th colspan="4">LIPID PROFILE</th>
-      </tr>
-    `;
-    lipidHeaderPrinted = true;
-  }
-
-  test.fields.forEach(f => {
-    const key = makeKey(testKey, f.name);
-    const result = report[key];
-    if (!result) return;
-
-    let flagHTML = "";
-    let rowClass = "";
-
-    if (f.ref) {
-     const { flag } = checkFlag(result, [f.ref], patient.gender, patient.age);
-      if (flag) {
-        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
-        rowClass = "abnormal-value";
-      }
-    }
-
-    html += `
-      <tr class="test-row">
-        <td>${f.name}</td>
-        <td class="td-result ${rowClass}">
-          <span class="result-value">${result}</span>
-          ${flagHTML}
-        </td>
-        <td class="td-unit">${f.unit}</td>
-        <td class="td-ref">${f.ref}</td>
-      </tr>
-    `;
-  });
-}
 /* ================= KIDNEY FUNCTION TEST ================= */
 else if (test.class === "KIDNEY FUNCTION TEST") {
 
@@ -1790,6 +1734,212 @@ const hasElectrolyteValue = electrolyteFields.some(name => {
       </tr>
     `;
   });
+}
+/* ================= LIPID PROFILE  ================= */
+else if (test.class === "LIPID REPORT") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.name);
+    return report[k];
+  });
+
+  if (!hasValue) return "";
+
+  if (!lipidHeaderPrinted) {
+    html += `
+      <tr class="test-title">
+        <th colspan="4">BIOCHEMISTRY REPORT</th>
+      </tr>
+      <tr class="test-head">
+        <th>INVESTIGATION</th>
+        <th>RESULT</th>
+        <th>UNIT</th>
+        <th>REFERENCE RANGE</th>
+      </tr>
+      <tr class="bio-subtitle">
+        <th colspan="4">LIPID PROFILE</th>
+      </tr>
+    `;
+    lipidHeaderPrinted = true;
+  }
+
+  test.fields.forEach(f => {
+    const key = makeKey(testKey, f.name);
+    const result = report[key];
+    if (!result) return;
+
+    let flagHTML = "";
+    let rowClass = "";
+
+    if (f.ref) {
+     const { flag } = checkFlag(result, [f.ref], patient.gender, patient.age);
+      if (flag) {
+        flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+        rowClass = "abnormal-value";
+      }
+    }
+
+    html += `
+      <tr class="test-row">
+        <td>${f.name}</td>
+        <td class="td-result ${rowClass}">
+          <span class="result-value">${result}</span>
+          ${flagHTML}
+        </td>
+        <td class="td-unit">${f.unit}</td>
+        <td class="td-ref">${f.ref}</td>
+      </tr>
+    `;
+  });
+}
+
+/* ================= IRON PROFILE ================= */
+else if (test.class === "IRON PROFILE") {
+
+  const hasValue = test.fields.some(f => {
+    const k = makeKey(testKey, f.key || f.name);
+    return report[k];
+  });
+  if (!hasValue) return "";
+
+  /* ===== TITLE ===== */
+  html += `
+    <tr class="test-title">
+      <th colspan="4">${test.title}</th>
+    </tr>
+  `;
+
+  /* ===== TABLE HEAD ===== */
+  html += `
+    <tr class="test-head">
+      <th>TEST DESCRIPTION</th>
+      <th>RESULT</th>
+      <th>UNITS</th>
+      <th>REFERENCE RANGE</th>
+    </tr>
+  `;
+
+  /* ===== SUBTITLE ===== */
+  if (test.subtitle) {
+    html += `
+      <tr class="bio-subtitle">
+        <th colspan="4">${test.subtitle}</th>
+      </tr>
+    `;
+  }
+
+ 
+/* ===== FIELDS (FROM iron.js) ===== */
+test.fields.forEach(f => {
+
+  const key = makeKey(testKey, f.key || f.name);
+  const result = report[key];
+  if (!result) return;
+
+  let flagHTML = "";
+  let rowClass = "";
+
+  if (f.ref) {
+    const { flag } = checkFlag(result, [f.ref]);
+    if (flag) {
+      flagHTML = `<span class="flag shift-flag">${flag}</span>`;
+      rowClass = "abnormal-value";
+    }
+  }
+
+  /* ===== MAIN RESULT ROW ===== */
+  html += `
+    <tr class="test-row">
+      <td>${f.name}</td>
+      <td class="td-result ${rowClass}">
+        <span class="result-value">${result}</span>
+        ${flagHTML}
+      </td>
+      <td>${f.unit || ""}</td>
+      <td class="td-ref">${f.ref || ""}</td>
+    </tr>
+  `;
+
+  /* ===== METHOD ROW (Separate, Clean) ===== */
+  if (f.method) {
+    html += `
+      <tr class="method-row">
+        <td colspan="4" style="padding:2px 6px; font-size:12px; color:#555;">
+          ${f.method}
+        </td>
+      </tr>
+    `;
+  }
+
+});
+
+
+
+ /* ===== AFTER SECTION (Proper Single Table) ===== */
+if (Array.isArray(test.after) && test.after.length) {
+
+  const headerIndex = test.after.findIndex(line =>
+    line.includes("Disease |")
+  );
+
+  html += `
+    <tr>
+      <td colspan="4" style="padding-top:6px">
+  `;
+
+  test.after.forEach((line, index) => {
+
+    // Plain text lines (Interpretation etc.)
+    if (!line.includes("|")) {
+      html += `
+        <div style="line-height:1.4; padding-top:4px;">
+          ${line}
+        </div>
+      `;
+    }
+
+    // Header line -> start table
+    if (index === headerIndex) {
+
+      const headers = line.split("|").map(c => c.trim());
+
+      html += `
+        <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:6px;">
+          <tr style="background:#f2f2f2; font-weight:bold;">
+            ${headers.map(h =>
+              `<th style="border:1px solid #000; padding:4px;">${h}</th>`
+            ).join("")}
+          </tr>
+      `;
+    }
+
+    // Data rows (after header)
+    if (index > headerIndex && line.includes("|")) {
+
+      const cols = line.split("|").map(c => c.trim());
+
+      html += `
+        <tr>
+          ${cols.map(c =>
+            `<td style="border:1px solid #000; padding:4px;">${c}</td>`
+          ).join("")}
+        </tr>
+      `;
+    }
+
+  });
+
+  // Close table
+  if (headerIndex !== -1) {
+    html += `</table>`;
+  }
+
+  html += `
+      </td>
+    </tr>
+  `;
+}
+
 }
 /* ================= COAGULATION PROFILE REPORT ================= */
 else if (test.class === "COAGULATION") {
@@ -2045,154 +2195,7 @@ else if (test.class === "GHb/HBA1c") {
   }
 }
 
-/* ================= IRON PROFILE ================= */
-else if (test.class === "IRON PROFILE") {
 
-  const hasValue = test.fields.some(f => {
-    const k = makeKey(testKey, f.key || f.name);
-    return report[k];
-  });
-  if (!hasValue) return "";
-
-  /* ===== TITLE ===== */
-  html += `
-    <tr class="test-title">
-      <th colspan="4">${test.title}</th>
-    </tr>
-  `;
-
-  /* ===== TABLE HEAD ===== */
-  html += `
-    <tr class="test-head">
-      <th>TEST DESCRIPTION</th>
-      <th>RESULT</th>
-      <th>UNITS</th>
-      <th>REFERENCE RANGE</th>
-    </tr>
-  `;
-
-  /* ===== SUBTITLE ===== */
-  if (test.subtitle) {
-    html += `
-      <tr class="bio-subtitle">
-        <th colspan="4">${test.subtitle}</th>
-      </tr>
-    `;
-  }
-
- 
-/* ===== FIELDS (FROM iron.js) ===== */
-test.fields.forEach(f => {
-
-  const key = makeKey(testKey, f.key || f.name);
-  const result = report[key];
-  if (!result) return;
-
-  let flagHTML = "";
-  let rowClass = "";
-
-  if (f.ref) {
-    const { flag } = checkFlag(result, [f.ref]);
-    if (flag) {
-      flagHTML = `<span class="flag shift-flag">${flag}</span>`;
-      rowClass = "abnormal-value";
-    }
-  }
-
-  /* ===== MAIN RESULT ROW ===== */
-  html += `
-    <tr class="test-row">
-      <td>${f.name}</td>
-      <td class="td-result ${rowClass}">
-        <span class="result-value">${result}</span>
-        ${flagHTML}
-      </td>
-      <td>${f.unit || ""}</td>
-      <td class="td-ref">${f.ref || ""}</td>
-    </tr>
-  `;
-
-  /* ===== METHOD ROW (Separate, Clean) ===== */
-  if (f.method) {
-    html += `
-      <tr class="method-row">
-        <td colspan="4" style="padding:2px 6px; font-size:12px; color:#555;">
-          ${f.method}
-        </td>
-      </tr>
-    `;
-  }
-
-});
-
-
-
- /* ===== AFTER SECTION (Proper Single Table) ===== */
-if (Array.isArray(test.after) && test.after.length) {
-
-  const headerIndex = test.after.findIndex(line =>
-    line.includes("Disease |")
-  );
-
-  html += `
-    <tr>
-      <td colspan="4" style="padding-top:6px">
-  `;
-
-  test.after.forEach((line, index) => {
-
-    // Plain text lines (Interpretation etc.)
-    if (!line.includes("|")) {
-      html += `
-        <div style="line-height:1.4; padding-top:4px;">
-          ${line}
-        </div>
-      `;
-    }
-
-    // Header line -> start table
-    if (index === headerIndex) {
-
-      const headers = line.split("|").map(c => c.trim());
-
-      html += `
-        <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:6px;">
-          <tr style="background:#f2f2f2; font-weight:bold;">
-            ${headers.map(h =>
-              `<th style="border:1px solid #000; padding:4px;">${h}</th>`
-            ).join("")}
-          </tr>
-      `;
-    }
-
-    // Data rows (after header)
-    if (index > headerIndex && line.includes("|")) {
-
-      const cols = line.split("|").map(c => c.trim());
-
-      html += `
-        <tr>
-          ${cols.map(c =>
-            `<td style="border:1px solid #000; padding:4px;">${c}</td>`
-          ).join("")}
-        </tr>
-      `;
-    }
-
-  });
-
-  // Close table
-  if (headerIndex !== -1) {
-    html += `</table>`;
-  }
-
-  html += `
-      </td>
-    </tr>
-  `;
-}
-
-}
 
 /* ================= CALCIUM & PHOSPHORUS ================= */
 else if (test.class === "CALCIUM & PHOSPHORUS") {
@@ -3608,6 +3611,61 @@ let forceSecondPageAfterCBC = false;
 
 // baadme 
 
+const TEST_ORDER = [
+  "CBC",
+  "ESR",
+  "BLD.GRP",
+  "BLD.SUGAR",
+  "SEROLOGY",
+  "CRP+RA",
+  "LFT",
+  "KFT",
+  "BIO CHEM OTHER",
+  "LIPID PROFILE",
+  "URINE PROFILE"
+];
+
+function getTestPriority(test) {
+
+  const name = (test.testname || "").toUpperCase();
+
+  // 🔥 LAST 2 FIXED
+  if (name.includes("URINE")) return 10000;       // LAST
+  if (name.includes("PS FOR MP")) return 9999;    // SECOND LAST
+
+  // 1️⃣ CBC + ESR
+  if (name.includes("CBC") || name.includes("ESR")) return 1;
+
+  // 2️⃣ BLOOD GROUP
+  if (name.includes("GROUP")) return 2;
+
+  // 3️⃣ BLOOD SUGAR (👉 FIXED POSITION)
+  if (name.includes("SUGAR")) return 3;
+
+  // 4️⃣ ALL SEROLOGY TESTS (👉 CRP ke immediately baad)
+  // if (test.class === "SEROLOGY TEST") return 4;
+  if (name.includes("SEROLOGY TEST") || name.includes("SEROLOGY")) return 4;
+
+  // 5️⃣ CRP + RA
+  if (name.includes("CRP") || name.includes("RA")) return 5;
+
+  
+
+  // 6️⃣ LFT
+  if (name.includes("LIVER") || name.includes("LFT")) return 6;
+
+  // 7️⃣ KFT
+  if (name.includes("KIDNEY") || name.includes("KFT")) return 7;
+
+  // 8️⃣ BIOCHEM
+  if (name.includes("BIO")) return 8;
+
+  // 9️⃣ LIPID
+  if (name.includes("LIPID")) return 9;
+
+  // 🔟 OTHER (IRON etc)
+  return 10;
+}
 function renderPreview() {
 
   // 🔥 IMPORTANT: clear old preview
@@ -3629,11 +3687,48 @@ forceSecondPageAfterCBC = false;
 
   /* ================= PAGINATION ================= */
 
+const sortedTests = [...selectedTests].sort((a, b) => {
+
+  const testA = Array.isArray(Tests)
+    ? Tests.find(t => t.key === a)
+    : Tests[a];
+
+  const testB = Array.isArray(Tests)
+    ? Tests.find(t => t.key === b)
+    : Tests[b];
+
+  if (!testA || !testB) return 0;
+
+  return getTestPriority(testA) - getTestPriority(testB);
+});
+
+
+console.log("FINAL ORDER:",
+  sortedTests.map(k => {
+    const t = Array.isArray(Tests)
+      ? Tests.find(x => x.key === k)
+      : Tests[k];
+    return t?.testname;
+  })
+);
 /* ===== DETECT CBC + MULTIPLE TESTS ===== */
+// selectedTests.sort((a, b) => {
+
+//   const testA = Array.isArray(Tests)
+//     ? Tests.find(t => t.key === a)
+//     : Tests[a];
+
+//   const testB = Array.isArray(Tests)
+//     ? Tests.find(t => t.key === b)
+//     : Tests[b];
+
+//   if (!testA || !testB) return 0;
+
+//   return getTestPriority(testA) - getTestPriority(testB);
+// });
 
 
-
-selectedTests.forEach(testKey => {
+sortedTests.forEach(testKey => {
 
   const test = Array.isArray(Tests)
     ? Tests.find(t => t.key === testKey)
@@ -3653,7 +3748,7 @@ selectedTests.forEach(testKey => {
 forceSecondPageAfterCBC = hasCBC && selectedTests.length > 1;
 
 // yaha tk  
-selectedTests.forEach(testKey => {
+sortedTests.forEach(testKey => {
 
   // const test = Tests[testKey];
   const test = Array.isArray(Tests)
@@ -3708,9 +3803,11 @@ if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
     newPage();
     currentTestsBox.appendChild(block);
 
+
+    
+    window.serologyHeaderPrinted = false;
     window.liverHeaderPrinted = false;
     window.lipidHeaderPrinted = false;
-    window.serologyHeaderPrinted = false;
     window.kidneyHeaderPrinted = false;
     window.COAGUHeaderPrinted = false;
     window.crpHeaderPrinted = false;
@@ -3899,4 +3996,3 @@ window.download = async () => {
 
 document.getElementById("downloadBtn")
   ?.addEventListener("click", download);
-
