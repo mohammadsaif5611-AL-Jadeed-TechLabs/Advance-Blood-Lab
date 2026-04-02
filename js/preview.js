@@ -3599,6 +3599,7 @@ else if (
 /* ================= PAGINATION ================= */
 
 let psForMpKey = null; // 🔥 PS FOR MP ko last ke liye store
+let urineKey = null;
 
 // 🔴 NEW VARIABLES
 let smallTestCount = 0;
@@ -3750,17 +3751,19 @@ forceSecondPageAfterCBC = hasCBC && selectedTests.length > 1;
 // yaha tk  
 sortedTests.forEach(testKey => {
 
-  // const test = Tests[testKey];
   const test = Array.isArray(Tests)
-  ? Tests.find(t => t.key === testKey)
-  : Tests[testKey];
+    ? Tests.find(t => t.key === testKey)
+    : Tests[testKey];
 
-if (!test) {
-  console.error("Test not found:", testKey);
-  return;
-}
+  if (!test) {
+    console.error("Test not found:", testKey);
+    return;
+  }
 
-  // 🔥 PS FOR MP ko abhi skip karo, baad me render hoga
+  // ✅ NAME TOP PE DEFINE
+  const name = (test.testname || "").toUpperCase();
+
+  // 🔥 PS FOR MP skip
   if (
     test.class === "HEMATOLOGY" &&
     test.testname === "PS FOR MP"
@@ -3769,7 +3772,13 @@ if (!test) {
     return;
   }
 
-  // 🔹 serology grouping as-is
+  // 🔥 URINE skip (NOW WORKING)
+  if (name.includes("URINE")) {
+    urineKey = testKey;
+    return;
+  }
+
+  // 🔹 serology grouping
   if (test.class === "SEROLOGY TEST") {
     serologyGroup.push(testKey);
     return;
@@ -3777,17 +3786,11 @@ if (!test) {
 
   if (!currentPage) newPage();
 
-
-  // 🔴 FORCE PAGE 2 AFTER CBC + URINE
-const name = (test.testname || "").toUpperCase();
-
-// 🔴 CBC ke baad page break
-if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
-  newPage();
-  pageBreakDone = true;
-}
-
-
+  // 🔴 CBC page break
+  if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
+    newPage();
+    pageBreakDone = true;
+  }
 
   const block = document.createElement("div");
   block.className = "test-block serology-block category-block";
@@ -3803,8 +3806,6 @@ if (forceSecondPageAfterCBC && !pageBreakDone && !name.includes("CBC")) {
     newPage();
     currentTestsBox.appendChild(block);
 
-
-    
     window.serologyHeaderPrinted = false;
     window.liverHeaderPrinted = false;
     window.lipidHeaderPrinted = false;
@@ -3833,6 +3834,27 @@ if (psForMpKey) {
   block.className = "test-block serology-block category-block";
 
   const html = renderTest(psForMpKey);
+  if (html) {
+    block.innerHTML = html;
+    currentTestsBox.appendChild(block);
+
+    if (isTestOverflow()) {
+      currentTestsBox.removeChild(block);
+      newPage();
+      currentTestsBox.appendChild(block);
+    }
+  }
+}
+/* ================= URINE (ALWAYS LAST) ================= */
+
+if (urineKey) {
+
+  if (!currentPage) newPage();
+
+  const block = document.createElement("div");
+  block.className = "test-block serology-block category-block";
+
+  const html = renderTest(urineKey);
   if (html) {
     block.innerHTML = html;
     currentTestsBox.appendChild(block);
