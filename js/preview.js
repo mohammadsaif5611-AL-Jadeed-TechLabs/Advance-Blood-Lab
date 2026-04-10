@@ -2726,8 +2726,10 @@ else if (test.key === "THYROID2") {
 }
 
 
-/* ================= SEROLOGY : CRP & RA TEST ================= */
-else if (test.class === "CRP SEROLOGY TEST") {
+ /* ================= SEROLOGY : CRP & RA TEST ================= */
+
+
+ else if (test.class === "CRP SEROLOGY TEST") {
 
   // 🔎 Check if any value entered
   const hasValue = test.fields.some(f => {
@@ -2747,14 +2749,24 @@ else if (test.class === "CRP SEROLOGY TEST") {
       <tr class="test-head">
         <th>INVESTIGATION</th>
         <th>RESULT</th>
-        <th style="
-    width: 9%;">UNIT</th>
-        <th style="
-    width: 24%;">REFERENCE RANGE</th>
+        <th style="width: 9%;">UNIT</th>
+        <th style="width: 24%;">REFERENCE RANGE</th>
       </tr>
     `;
     window.crpHeaderPrinted = true;
   }
+
+  /* ================= RA PRE-CHECK (IMPORTANT FIX) ================= */
+
+  const raField = test.fields.find(
+    f => f.name && f.name.toUpperCase().includes("RHEUMATOID")
+  );
+
+  const raKey = raField && makeKey(testKey, raField.name);
+  const raValue =
+    raKey && report.hasOwnProperty(raKey)
+      ? report[raKey]
+      : "";
 
   /* ================= CRP SECTION ================= */
 
@@ -2818,17 +2830,18 @@ else if (test.class === "CRP SEROLOGY TEST") {
     });
   }
 
+  // ✅ PERFECT DIVIDER (ONLY IF BOTH EXIST)
+  if (crpKey && crpValue !== "" && raKey && raValue !== "") {
+    html += `
+      <tr>
+        <td colspan="4" style="padding:0;">
+          <div style="border-top: 1px solid #000; margin: 8px 0;"></div>
+        </td>
+      </tr>
+    `;
+  }
+
   /* ================= RA SECTION ================= */
-
-  const raField = test.fields.find(
-    f => f.name && f.name.toUpperCase().includes("RHEUMATOID")
-  );
-
-  const raKey = raField && makeKey(testKey, raField.name);
-  const raValue =
-    raKey && report.hasOwnProperty(raKey)
-      ? report[raKey]
-      : "";
 
   // ✅ SAME FIX FOR RA
   if (raKey && raValue !== "") {
@@ -2841,7 +2854,7 @@ else if (test.class === "CRP SEROLOGY TEST") {
     let flagHTML = "";
     let rowClass = "";
 
-    if (raField.ref) {
+    if (raField && raField.ref) {
       const { flag } = checkFlag(raValue, [raField.ref], patient.gender);
       if (flag) {
         flagHTML = `<span class="flag shift-flag">${flag}</span>`;
